@@ -1,0 +1,454 @@
+/* Definição de variáveis para cores e espaçamentos consistentes */
+:root {
+  /* Tema claro (padrão) */
+  --primary-color: #4285f4;
+  --accent-color: #4285f4;
+  --primary-hover: #3367d6;
+  --background-color: #f8f9fa;
+  --container-bg: #ffffff;
+  --text-color: #333333;
+  --text-secondary: #555555;
+  --border-color: #e0e0e0;
+  --danger-color: #f44336;
+  --warning-color: #ff9800;
+  --success-color: #4caf50;
+  --meter-bg: #222222;
+  
+  /* Dimensões e espaçamentos */
+  --border-radius: 8px;
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --transition-speed: 0.3s;
+}
+
+/* Tema escuro */
+[data-theme="dark"] {
+  --primary-color: #a78bfa;
+  --accent-color: #8b5cf6;
+  --primary-hover: #8b5cf6;
+  --background-color: #1a1a2e;
+  --container-bg: #16213e;
+  --text-color: #e2e2e2;
+  --text-secondary: #b4b4b4;
+  --border-color: #2c2c54;
+  --danger-color: #f87171;
+  --warning-color: #fbbf24;
+  --success-color: #4ade80;
+  --meter-bg: #111111;
+}
+
+/* Estilos gerais */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+.container {
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+footer {
+  margin-top: auto;
+  padding-top: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-color);
+}
+
+/* Controles */
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.primary:hover {
+  background-color: var(--primary-hover);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.input-selection select {
+  padding: 10px 15px;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  background-color: var(--container-bg);
+  color: var(--text-color);
+  font-size: 15px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.input-selection select:hover {
+  border-color: var(--primary-color);
+}
+
+.input-selection select:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Tabs de Visualização */
+.visualizer-container {
+  width: 100%;
+  height: 500px;
+  border-radius: var(--border-radius);
+  background-color: var(--container-bg);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tab-btn {
+  padding: 12px 20px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  text-align: center;
+}
+
+.tab-btn:hover {
+  color: var(--primary-color);
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.tab-btn.active {
+  color: var(--primary-color);
+  border-bottom: 3px solid var(--primary-color);
+}
+
+.tab-content {
+  flex: 1;
+  position: relative;
+}
+
+.tab-pane {
+  display: none;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 20px;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+/* Visualizadores */
+#oscilloscope-canvas {
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  border-radius: var(--border-radius);
+}
+
+#spectrogram-container {
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: var(--border-radius);
+}
+
+/* VU Meters */
+.vu-meters {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 100%;
+  gap: 30px;
+}
+
+.vu-meter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 80px;
+  height: 100%;
+}
+
+.meter-label {
+  font-weight: bold;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.meter-bar {
+  width: 60px;
+  height: 300px;
+  background-color: var(--meter-bg);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.meter-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: var(--success-color);
+  transition: height 0.05s ease-out;
+}
+
+.meter-value {
+  margin-top: 10px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 14px;
+  color: var(--text-color);
+}
+
+/* Tema Toggle Switch */
+.theme-toggle {
+  position: relative;
+}
+
+.theme-checkbox {
+  opacity: 0;
+  position: absolute;
+}
+
+.theme-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  width: 50px;
+  height: 26px;
+  background: #ebebeb;
+  border-radius: 100px;
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+.theme-label .theme-icon {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  transition: 0.2s;
+  background: white;
+  box-shadow: 0 0 2px 0 rgba(10, 10, 10, 0.29);
+}
+
+.theme-checkbox:checked + .theme-label {
+  background-color: var(--primary-color);
+}
+
+.theme-checkbox:checked + .theme-label .theme-icon {
+  left: calc(100% - 3px);
+  transform: translateX(-100%);
+}
+
+/* YouTube Section */
+.youtube-section {
+  margin-bottom: 20px;
+  width: 100%;
+  border-radius: var(--border-radius);
+  background-color: var(--container-bg);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+}
+
+.youtube-search {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding: 15px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.youtube-search input {
+  flex: 1;
+  padding: 10px 15px;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  background-color: var(--container-bg);
+  color: var(--text-color);
+  font-size: 15px;
+}
+
+.youtube-results {
+  padding: 0 15px;
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.youtube-result {
+  width: calc(33.333% - 10px);
+  cursor: pointer;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  transition: transform 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.youtube-result:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 10px rgba(0,0,0,0.15);
+}
+
+.youtube-result img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.youtube-result-info {
+  padding: 10px;
+  background-color: var(--container-bg);
+}
+
+.youtube-result-title {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 5px;
+  color: var(--text-color);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: 40px;
+}
+
+.youtube-result-channel {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.youtube-player-container {
+  width: 100%;
+  aspect-ratio: 16/9;
+  max-height: 450px;
+  background-color: #000;
+  display: none;
+}
+
+#youtube-player {
+  width: 100%;
+  height: 100%;
+}
+
+.youtube-player-container.active {
+  display: block;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+  
+  .controls {
+    flex-direction: column;
+  }
+  
+  .btn, .input-selection select {
+    width: 100%;
+  }
+  
+  .visualizer-container {
+    height: 400px;
+  }
+  
+  .vu-meters {
+    gap: 15px;
+  }
+  
+  .youtube-result {
+    width: calc(50% - 7.5px);
+  }
+}
+
+@media (max-width: 480px) {
+  .youtube-result {
+    width: 100%;
+  }
+  
+  .youtube-search {
+    flex-direction: column;
+  }
+}

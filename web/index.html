@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soundctor - Visualizador de Áudio</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Soundctor</h1>
+            <div class="theme-toggle">
+                <input type="checkbox" id="theme-switch" class="theme-checkbox">
+                <label for="theme-switch" class="theme-label">
+                    <span class="theme-icon"></span>
+                </label>
+            </div>
+        </header>
+
+        <div class="youtube-section">
+            <div class="youtube-search">
+                <input type="text" id="youtube-search-input" placeholder="Buscar vídeo no YouTube...">
+                <button id="youtube-search-btn" class="btn primary">Buscar</button>
+            </div>
+            <div class="youtube-results" id="youtube-results">
+                <!-- Resultados da busca aparecerão aqui -->
+            </div>
+            <div class="youtube-player-container" id="youtube-player-container">
+                <div id="youtube-player"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="start-audio" class="btn primary">Iniciar Captura</button>
+            <div class="input-selection">
+                <select id="audio-source" disabled>
+                    <option value="microphone">Microfone</option>
+                    <option value="system">Áudio do Sistema</option>
+                    <option value="tab">Aba Atual</option>
+                    <option value="youtube" selected>YouTube</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="visualizer-container">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="oscilloscope">Osciloscópio</button>
+                <button class="tab-btn" data-tab="spectrogram">Espectrograma 3D</button>
+                <button class="tab-btn" data-tab="vu-meter">VU Meters</button>
+            </div>
+
+            <div class="tab-content">
+                <div id="oscilloscope" class="tab-pane active">
+                    <canvas id="oscilloscope-canvas"></canvas>
+                </div>
+                <div id="spectrogram" class="tab-pane">
+                    <div id="spectrogram-container"></div>
+                </div>
+                <div id="vu-meter" class="tab-pane">
+                    <div class="vu-meters">
+                        <div class="vu-meter left">
+                            <div class="meter-label">L</div>
+                            <div class="meter-bar">
+                                <div class="meter-fill"></div>
+                            </div>
+                            <div class="meter-value">-∞ dB</div>
+                        </div>
+                        <div class="vu-meter right">
+                            <div class="meter-label">R</div>
+                            <div class="meter-bar">
+                                <div class="meter-fill"></div>
+                            </div>
+                            <div class="meter-value">-∞ dB</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Soundctor Web v2.0</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
