@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let youtubeVideoNodes = [];
     
     // Chave da API do YouTube (obtenha a sua em https://console.cloud.google.com/)
-    const YOUTUBE_API_KEY = 'YOUR_API_KEY'; // Substitua pela sua chave de API
+    const YOUTUBE_API_KEY = 'AIzaSyAKn4Vfy-hElGHFyUxuhkG_U_j6n2Metho'; // Substitua pela sua chave de API
     
     // Configurações de visualização
     const FFT_SIZE = 2048;
