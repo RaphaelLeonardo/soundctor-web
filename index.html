@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Soundctor - Visualizador de Áudio</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
@@ -57,6 +59,28 @@
                 <h3 class="visualizer-title">Espectrograma 3D</h3>
                 <div class="visualizer-content">
                     <div id="spectrogram-container"></div>
+                </div>
+                <div class="visualizer-control-toggle">
+                    <button class="control-toggle-btn" title="Opções de Visualização">
+                        <span class="material-icons">3d_rotation</span>
+                    </button>
+                    <div class="visualizer-controls">
+                        <button class="view-btn" data-view="isometric" title="Visão Isométrica (Padrão)">
+                            <span class="material-icons">view_in_ar</span>
+                        </button>
+                        <button class="view-btn" data-view="top" title="Visão de Topo">
+                            <span class="material-icons">vertical_align_top</span>
+                        </button>
+                        <button class="view-btn" data-view="side" title="Visão Lateral">
+                            <span class="material-icons">vertical_align_center</span>
+                        </button>
+                        <button class="view-btn" data-view="front" title="Visão Frontal">
+                            <span class="material-icons">vertical_align_bottom</span>
+                        </button>
+                        <button class="view-btn" data-view="free" title="Rotação Livre">
+                            <span class="material-icons">open_with</span>
+                        </button>
+                    </div>
                 </div>
             </div>
             

@@ -303,9 +303,10 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
     
-    // Inicializar o espectrograma 3D estilo Chrome Music Lab
+    // Inicializar o espectrograma 3D estilo Chrome Music Lab com múltiplas visualizações
     function initSpectrogram() {
         const container = document.getElementById('spectrogram-container');
+        const viewButtons = document.querySelectorAll('#spectrogram .view-btn');
         
         // THREE.js setup
         const scene = new THREE.Scene();
@@ -315,6 +316,14 @@ document.addEventListener('DOMContentLoaded', function() {
         renderer.setSize(container.clientWidth, container.clientHeight);
         renderer.setClearColor(0x000000, 0.3);
         container.appendChild(renderer.domElement);
+        
+        // Inicializar controles de órbita para rotação livre
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.25;
+        controls.screenSpacePanning = false;
+        controls.maxPolarAngle = Math.PI / 1.5;
+        controls.enabled = false; // Inicialmente desativado
         
         // Configurações
         const frequencyBins = 128;  // Número de bins de frequência
@@ -386,6 +395,11 @@ document.addEventListener('DOMContentLoaded', function() {
         wireMesh.position.y = mesh.position.y;
         scene.add(wireMesh);
         
+        // Adicionar eixos para referência
+        const axesHelper = new THREE.AxesHelper(1);
+        axesHelper.visible = false; // Inicialmente oculto
+        scene.add(axesHelper);
+        
         // Adicionar luzes
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         scene.add(ambientLight);
@@ -394,9 +408,37 @@ document.addEventListener('DOMContentLoaded', function() {
         directionalLight.position.set(0, 1, 1);
         scene.add(directionalLight);
         
-        // Posicionar câmera
+        // Posicionar câmera na visão isométrica padrão
         camera.position.set(0, 0.6, 1.6);
         camera.lookAt(0, 0, 0);
+        
+        // Salvar posições de câmera para as diferentes visões
+        const cameraViews = {
+            isometric: {
+                position: new THREE.Vector3(0, 0.6, 1.6),
+                target: new THREE.Vector3(0, 0, 0),
+                rotation: { x: -Math.PI / 3, z: 0 }
+            },
+            top: {
+                position: new THREE.Vector3(0, 2, 0.01), // Ligeiramente deslocado para evitar problemas de visualização
+                target: new THREE.Vector3(0, 0, 0),
+                rotation: { x: -Math.PI / 2, z: 0 } // Virado para baixo para ver de cima
+            },
+            side: {
+                position: new THREE.Vector3(0, 0, 2),
+                target: new THREE.Vector3(0, 0, 0),
+                rotation: { x: -Math.PI / 2, z: 0 }
+            },
+            front: {
+                position: new THREE.Vector3(2, 0, 0),
+                target: new THREE.Vector3(0, 0, 0),
+                rotation: { x: -Math.PI / 2, z: Math.PI / 2 }
+            }
+        };
+        
+        // Variável para armazenar o modo de visualização atual
+        let currentView = 'isometric';
+        let autoRotate = false; // Desligado por padrão
         
         // Classe para gerenciar dados de áudio
         class AudioDataHistory {
@@ -427,7 +469,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Criar histórico de dados
         const audioDataHistory = new AudioDataHistory(historyLength, frequencyBins);
         
-        // Função para mapear logaritmicamente frequências de áudio (para dar mais detalhes a baixas frequências)
+        // Função para mapear logaritmicamente frequências de áudio
         function logScaleFrequencyData(frequencyData, binCount) {
             const nyquist = 22050; // Metade da taxa de amostragem padrão
             const resultData = new Float32Array(binCount);
@@ -447,6 +489,84 @@ document.addEventListener('DOMContentLoaded', function() {
             
             return resultData;
         }
+        
+        // Função para transição suave da câmera para uma nova visão
+        function setCameraView(view) {
+            if (view === 'free') {
+                // Modo de rotação livre
+                controls.enabled = true;
+                axesHelper.visible = false; // Eixos ocultos por padrão na visão livre
+                autoRotate = false;
+                
+                // Marcar o botão de rotação livre como ativo
+                viewButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.view === 'free');
+                });
+                
+                return;
+            }
+            
+            // Desativar controles de órbita para as visões predefinidas
+            controls.enabled = false;
+            axesHelper.visible = false;
+            autoRotate = false; // Desativado por padrão
+            
+            // Verificar se a visão existe
+            const viewData = cameraViews[view];
+            if (!viewData) return;
+            
+            // Atualizar posição e alvo da câmera
+            camera.position.copy(viewData.position);
+            camera.lookAt(viewData.target);
+            
+            // Atualizar rotação do mesh
+            mesh.rotation.x = viewData.rotation.x;
+            mesh.rotation.z = viewData.rotation.z;
+            
+            // Sincronizar rotação do wireframe
+            wireMesh.rotation.x = mesh.rotation.x;
+            wireMesh.rotation.z = mesh.rotation.z;
+            
+            // Atualizar visão atual
+            currentView = view;
+            
+            // Atualizar classes dos botões
+            viewButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === view);
+            });
+        }
+        
+        // Configurar listener para o botão toggle (para dispositivos touch)
+        const toggleButton = document.querySelector('#spectrogram .control-toggle-btn');
+        if (toggleButton) {
+            toggleButton.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevenir que o clique feche o menu imediatamente
+                const controls = document.querySelector('#spectrogram .visualizer-controls');
+                controls.classList.toggle('show');
+            });
+            
+            // Fechar o menu ao clicar fora dele
+            document.addEventListener('click', () => {
+                const controls = document.querySelector('#spectrogram .visualizer-controls');
+                if (controls.classList.contains('show')) {
+                    controls.classList.remove('show');
+                }
+            });
+        }
+        
+        // Configurar listeners para os botões de visão
+        viewButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevenir que o clique feche o menu imediatamente
+                const view = btn.dataset.view;
+                setCameraView(view);
+            });
+            
+            // Deixar o botão isométrico ativo inicialmente
+            if (btn.dataset.view === 'isometric') {
+                btn.classList.add('active');
+            }
+        });
         
         // Redimensionar quando a janela mudar de tamanho
         window.addEventListener('resize', () => {
@@ -481,7 +601,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         for (let x = 0; x < frequencyBins; x++) {
                             // Encontre o índice na geometria da malha
-                            // A geometria PlaneGeometry tem (frequencyBins) * (historyLength) vértices
                             const vertIndex = (z * frequencyBins + x) * 3;
                             
                             // Definir altura (coordenada y na geometria, mas visual z devido à rotação)
@@ -500,9 +619,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     geometry.attributes.position.needsUpdate = true;
                 }
                 
-                // Animar a rotação da malha para efeito de movimento
-                mesh.rotation.z += 0.001;
-                wireMesh.rotation.z = mesh.rotation.z;
+                // Animar a rotação da malha apenas se o autoRotate estiver ativo
+                if (autoRotate) {
+                    mesh.rotation.z += 0.001;
+                    wireMesh.rotation.z = mesh.rotation.z;
+                }
+                
+                // Atualizar controles de órbita se estiverem ativos
+                if (controls.enabled) {
+                    controls.update();
+                }
                 
                 // Renderizar a cena
                 renderer.render(scene, camera);
