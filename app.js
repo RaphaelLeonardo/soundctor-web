@@ -303,55 +303,150 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
     
-    // Inicializar o espectrograma 3D
+    // Inicializar o espectrograma 3D estilo Chrome Music Lab
     function initSpectrogram() {
         const container = document.getElementById('spectrogram-container');
         
         // THREE.js setup
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+        const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         
         renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setClearColor(0x000000, 0.3);
         container.appendChild(renderer.domElement);
         
-        // Criar geometria para visualização
-        const geometry = new THREE.BufferGeometry();
-        const divisions = 128; // Número de barras
+        // Configurações
+        const frequencyBins = 128;  // Número de bins de frequência
+        const historyLength = 60;   // Quantos quadros de história manter
         
-        // Posições iniciais
-        const positions = new Float32Array(divisions * 3);
-        const colors = new Float32Array(divisions * 3);
+        // Criar a malha de superfície para o espectrograma
+        const geometry = new THREE.PlaneGeometry(2, 1, frequencyBins - 1, historyLength - 1);
         
-        for (let i = 0; i < divisions; i++) {
-            // Posição X: distribuído uniformemente
-            positions[i * 3] = (i / divisions) * 2 - 1;
-            // Posição Y: todas começam em 0
-            positions[i * 3 + 1] = 0;
-            // Posição Z: profundidade fixa
-            positions[i * 3 + 2] = 0;
+        // Materiais e textura
+        const vertexShader = `
+            varying vec2 vUv;
+            varying float vElevation;
             
-            // Cores (gradiente do azul para o vermelho)
-            colors[i * 3] = i / divisions; // R
-            colors[i * 3 + 1] = 0.5 - Math.abs(i / divisions - 0.5); // G
-            colors[i * 3 + 2] = 1 - i / divisions; // B
-        }
+            void main() {
+                vUv = uv;
+                vElevation = position.z;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `;
         
-        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        const fragmentShader = `
+            varying vec2 vUv;
+            varying float vElevation;
+            
+            vec3 colorA = vec3(0.0, 0.0, 0.5);  // Azul escuro
+            vec3 colorB = vec3(0.0, 1.0, 1.0);  // Ciano
+            vec3 colorC = vec3(1.0, 1.0, 0.0);  // Amarelo
+            vec3 colorD = vec3(1.0, 0.0, 0.0);  // Vermelho
+            
+            void main() {
+                float t = vElevation * 2.0;
+                
+                vec3 color;
+                if (t < 0.33) {
+                    color = mix(colorA, colorB, t * 3.0);
+                } else if (t < 0.66) {
+                    color = mix(colorB, colorC, (t - 0.33) * 3.0);
+                } else {
+                    color = mix(colorC, colorD, (t - 0.66) * 3.0);
+                }
+                
+                gl_FragColor = vec4(color, 1.0);
+            }
+        `;
         
-        const material = new THREE.LineBasicMaterial({
-            vertexColors: true,
-            linewidth: 2
+        const material = new THREE.ShaderMaterial({
+            uniforms: {},
+            vertexShader: vertexShader,
+            fragmentShader: fragmentShader,
+            side: THREE.DoubleSide,
+            wireframe: false
         });
         
-        const line = new THREE.Line(geometry, material);
-        scene.add(line);
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.rotation.x = -Math.PI / 3; // Rotação para vista isométrica
+        mesh.position.y = -0.2;
+        scene.add(mesh);
         
-        // Posição da câmera
-        camera.position.z = 2;
-        camera.position.y = 0.5;
+        // Malha wireframe para efeito de grade
+        const wireMaterial = new THREE.MeshBasicMaterial({
+            color: 0x444444,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.15
+        });
+        
+        const wireMesh = new THREE.Mesh(geometry.clone(), wireMaterial);
+        wireMesh.rotation.x = mesh.rotation.x;
+        wireMesh.position.y = mesh.position.y;
+        scene.add(wireMesh);
+        
+        // Adicionar luzes
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(0, 1, 1);
+        scene.add(directionalLight);
+        
+        // Posicionar câmera
+        camera.position.set(0, 0.6, 1.6);
         camera.lookAt(0, 0, 0);
+        
+        // Classe para gerenciar dados de áudio
+        class AudioDataHistory {
+            constructor(length, binCount) {
+                this.length = length;
+                this.binCount = binCount;
+                this.data = new Array(length);
+                
+                for (let i = 0; i < length; i++) {
+                    this.data[i] = new Float32Array(binCount).fill(0);
+                }
+                
+                this.currentIndex = 0;
+            }
+            
+            addFrame(frequencyData) {
+                this.data[this.currentIndex] = frequencyData.slice();
+                this.currentIndex = (this.currentIndex + 1) % this.length;
+            }
+            
+            getFrame(index) {
+                // Obter quadro relativo ao atual (0 = mais recente, length-1 = mais antigo)
+                const actualIndex = (this.currentIndex - 1 - index + this.length) % this.length;
+                return this.data[actualIndex];
+            }
+        }
+        
+        // Criar histórico de dados
+        const audioDataHistory = new AudioDataHistory(historyLength, frequencyBins);
+        
+        // Função para mapear logaritmicamente frequências de áudio (para dar mais detalhes a baixas frequências)
+        function logScaleFrequencyData(frequencyData, binCount) {
+            const nyquist = 22050; // Metade da taxa de amostragem padrão
+            const resultData = new Float32Array(binCount);
+            
+            for (let i = 0; i < binCount; i++) {
+                // Mapeamento logarítmico para obter o índice do buffer original
+                // Dá mais espaço para frequências baixas
+                const percent = i / binCount;
+                const power = 2.0;
+                const scaledPercent = Math.pow(percent, power);
+                
+                // Converter para índice no array original
+                const index = Math.round(scaledPercent * (frequencyData.length - 1));
+                
+                resultData[i] = frequencyData[index] / 255.0; // Normalizar para 0-1
+            }
+            
+            return resultData;
+        }
         
         // Redimensionar quando a janela mudar de tamanho
         window.addEventListener('resize', () => {
@@ -364,36 +459,52 @@ document.addEventListener('DOMContentLoaded', function() {
             renderer.setSize(width, height);
         });
         
+        // Interface para visualização
         spectrogram = {
             visualize: function(analyser) {
-                const positions = line.geometry.attributes.position.array;
+                const positions = geometry.attributes.position.array;
                 
                 if (analyser) {
                     const bufferLength = analyser.frequencyBinCount;
                     const dataArray = new Uint8Array(bufferLength);
+                    
+                    // Obter dados de frequência
                     analyser.getByteFrequencyData(dataArray);
                     
-                    // Atualizar a altura de cada barra com base nos dados de frequência
-                    for (let i = 0; i < divisions; i++) {
-                        // Mapeamento logarítmico para frequências para melhor visualização
-                        const index = Math.floor(i / divisions * (bufferLength / 2));
-                        const value = dataArray[index] / 255.0;
+                    // Processar e armazenar dados
+                    const scaledData = logScaleFrequencyData(dataArray, frequencyBins);
+                    audioDataHistory.addFrame(scaledData);
+                    
+                    // Atualizar a malha do espectrograma com novos dados
+                    for (let z = 0; z < historyLength; z++) {
+                        const frameData = audioDataHistory.getFrame(z);
                         
-                        // Atualizar posição Y (altura) da barra
-                        positions[i * 3 + 1] = value * 1.5;
+                        for (let x = 0; x < frequencyBins; x++) {
+                            // Encontre o índice na geometria da malha
+                            // A geometria PlaneGeometry tem (frequencyBins) * (historyLength) vértices
+                            const vertIndex = (z * frequencyBins + x) * 3;
+                            
+                            // Definir altura (coordenada y na geometria, mas visual z devido à rotação)
+                            positions[vertIndex + 2] = frameData[x] * 0.5; // Escala da amplitude
+                        }
                     }
+                    
+                    // Marcar a geometria para atualização
+                    geometry.attributes.position.needsUpdate = true;
+                    
                 } else {
-                    // Estado padrão - barras com altura zero
-                    for (let i = 0; i < divisions; i++) {
-                        positions[i * 3 + 1] = 0;
+                    // Estado padrão - superficie plana
+                    for (let i = 0; i < positions.length; i += 3) {
+                        positions[i + 2] = 0; // Zerar todas as alturas
                     }
+                    geometry.attributes.position.needsUpdate = true;
                 }
                 
-                line.geometry.attributes.position.needsUpdate = true;
+                // Animar a rotação da malha para efeito de movimento
+                mesh.rotation.z += 0.001;
+                wireMesh.rotation.z = mesh.rotation.z;
                 
-                // Sempre gira suavemente mesmo em estado padrão
-                line.rotation.y += 0.002;
-                
+                // Renderizar a cena
                 renderer.render(scene, camera);
             }
         };
