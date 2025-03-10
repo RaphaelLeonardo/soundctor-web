@@ -1,0 +1,7 @@
+  Para avançar com o problema de CORS, recomendo uma das seguintes opções:
+
+  1. Implementar um servidor proxy backend que extraia o áudio do YouTube e o forneça pela mesma origem
+  2. Continuar usando a abordagem de captura de áudio do sistema, mas melhorar as instruções para os usuários
+  3. Usar um serviço de terceiros que forneça um endpoint de áudio do YouTube sem restrições de CORS
+
+  Se quiser explorar alguma dessas opções, estou à disposição para ajudar.

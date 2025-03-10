@@ -245,6 +245,8 @@ select {
   height: 300px;
   display: flex;
   flex-direction: column;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .visualizer-title {
@@ -260,6 +262,7 @@ select {
   justify-content: center;
   align-items: center;
   overflow: hidden;
+  width: 100%;
 }
 
 /* Visualizadores */
@@ -268,6 +271,7 @@ select {
   height: 100%;
   background-color: rgba(0, 0, 0, 0.9);
   border-radius: var(--border-radius);
+  max-width: 100%;
 }
 
 #spectrogram-container {
@@ -275,6 +279,7 @@ select {
   height: 100%;
   background-color: rgba(0, 0, 0, 0.8);
   border-radius: var(--border-radius);
+  max-width: 100%;
 }
 
 /* VU Meters */
@@ -406,6 +411,16 @@ footer {
     grid-template-columns: 1fr;
   }
   
+  /* Ajustes específicos para os visualizadores em telas menores */
+  .visualizer-card {
+    width: 100%;
+  }
+  
+  #oscilloscope, #spectrogram {
+    max-width: 100%;
+    width: 100%;
+  }
+  
   .vu-meters {
     gap: 15px;
   }
@@ -423,5 +438,11 @@ footer {
   
   h1 {
     font-size: 2rem;
+  }
+  
+  /* Ajustes adicionais para telas muito pequenas */
+  .visualizer-card {
+    padding: 10px;
+    height: 250px;
   }
 }
