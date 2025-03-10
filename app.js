@@ -106,6 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Iniciar captura de áudio
+    // Substituir essa parte no seu código:
     async function startAudioCapture() {
         const selectedSource = audioSourceSelect.value;
         
@@ -120,27 +121,60 @@ document.addEventListener('DOMContentLoaded', function() {
                     throw new Error('Player do YouTube não está pronto');
                 }
                 
-                // Usar o contexto de áudio Web Audio API para capturar o áudio do YouTube
-                // Isso requer um workaround já que o YouTube não expõe diretamente o stream de áudio
+                // Método 1: Usar um elemento de áudio conectado a um proxy de áudio
+                // Crie um servidor proxy em seu backend ou use um serviço existente
+                // que possa extrair o áudio do YouTube e fornecer como stream de áudio
                 
-                // Conectar um MediaElementAudioSourceNode ao vídeo (simulado)
-                const videoElement = document.createElement('video');
-                videoElement.crossOrigin = 'anonymous';
-                videoElement.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAA9RtZGF0AAACrgYF//+q3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE0MiByMjQ4OSAtIEguMjY0L01QRUctNCBBVkMgY29kZWMgLSBDb3B5bGVmdCAyMDAzLTIwMTQgLSBodHRwOi8vd3d3LnZpZGVvbGFuLm9yZy94MjY0Lmh0bWwgLSBvcHRpb25zOiBjYWJhYz0wIHJlZj0zIGRlYmxvY2s9MTowOjAgYW5hbHlzZT0weDM6MHgxMTMgbWU9aGV4IHN1Ym1lPTcgcHN5PTEgcHN5X3JkPTEuMDA6MC4wMCBtaXhlZF9yZWY9MSBtZV9yYW5nZT0xNiBjaHJvbWFfbWU9MSB0cmVsbGlzPTEgOHg4ZGN0PTAgY3FtPTAgZGVhZHpvbmU9MjEsMTEgZmFzdF9wc2tpcD0xIGNocm9tYV9xcF9vZmZzZXQ9LTIgdGhyZWFkcz0xIGxvb2thaGVhZF90aHJlYWRzPTEgc2xpY2VkX3RocmVhZHM9MCBucj0wIGRlY2ltYXRlPTEgaW50ZXJsYWNlZD0wIGJsdXJheV9jb21wYXQ9MCBjb25zdHJhaW5lZF9pbnRyYT0wIGJmcmFtZXM9MCB3ZWlnaHRwPTAga2V5aW50PTI1MCBrZXlpbnRfbWluPTI1IHNjZW5lY3V0PTQwIGludHJhX3JlZnJlc2g9MCByY19sb29rYWhlYWQ9NDAgcmM9Y3JmIG1idHJlZT0xIGNyZj0yMy4wIHFjb21wPTAuNjAgcXBtaW49MCBxcG1heD02OSBxcHN0ZXA9NCB2YnZfbWF4cmF0ZT03NjggdmJ2X2J1ZnNpemU9MzAwMCBjcmZfbWF4PTAuMCBuYWxfaHJkPW5vbmUgZmlsbGVyPTAgaXBfcmF0aW89MS40MCBhcT0xOjEuMDAAgAAAABZliIQD/3XvJx/XUU4Mt1v6fFjiJkQAAAAMQZokbEK/DQB1AAAADAGeSWpCvw0AdQAAAAwBnktqQr8NAHUAAAAMAZpkbEK/DQB1AAAADAGaaWpCvw0AdQAAAAwBnmtqQr8NAHUAAAAMAZpsbEK/DQB1AAAADAGab2pCvw0AdQAAAAwBnnNqQr8NAHUAAAAMAZp0bEK/DQB1AAAADAGadWpCvw0AdQAAAAwBnnVqQr8NAHUAAAAMAZp2bEK/DQB1AAAADAGad2pCvw0AdQAAAAwBnndqQr8NAHUAAAAMAZp4bEK/DQB1AAAADAGaeWpCvw0AdQAAAAwBnnlqQr8NAHUAAAAMAZp6bEK/DQB1AAAADAGae2pCvw0AdQAAAAwBnntqQr8NAHUAAAAMAZp8bEK/DQB1AAAADAGafWpCvw0AdQAAAAwBnn1qQr8NAHUAAAAMAZp+bEK/DQB1AAAADAGaf2pCvw0AdQAAAAwBnoFqQr8NAHUAAAAMAZqAakK/DQB1AAAADAGegmpCvw0AdQAAAAwBmoFqQr8NAHUAAAAMAZqCakK/DQB1AAAADAGeg2pCvw0AdQAAAAwBmoJqQr8NAHUAAAAMAZqDakK/DQB1AAAADAGehGpCvw0AdQAAAAwBmoNqQr8NAHUAAAAMAZqEakK/DQB1AAAADAGehWpCvw0AdQAAAAwBmoRqQr8NAHUAAAAMAZqFakK/DQB1AAAADAGehmpCvw0AdQAAAAwBmoVqQr8NAHUAAAAMAZqGakK/DQB1AAAADAGeh2pCvw0AdQAAAAwBmohqQr8NAHUAAAAMAZqHakK/DQB1AAAADAGeiGpCvw0AdQAAAAwBmohqQr8NAHUAAAAMAZqJakK/DQB1AAAADAGeiWpCvw0AdQAAAAwBmoqqQr8NAHUAAAAMAZqJakK/DQB1AAAADAGaimpCvw0AdQAAAAwBmotqQr8NAHUAAAAMAZqKakK/DQB1AAAADAGai2pCvw0AdQAAAAwBmoxyQr8NAHUAAAAMAZqLakK/DQB1AAAADAGajHJCvw0AdQAAAAwBno1yQr8NAHUAAAAMAZqMckK/DQB1AAAADAGejnJCvw0AdQAAAAwBmo1yQr8NAHUAAAAMAZqOckK/DQB1AAAADAGej3JCvw0AdQAAAAwBmpByQr8NAHUAAAAMAZqPckK/DQB1AAAADAGakHJCvw0AdQAAAAwBnpFyQr8NAHUAAAAMAZqRckK/DQB1AAAADAGekXJCvw0AdQAAAAwBmpJyQr8NAHUAAAAMAZqSakK/DQB1AAAADAGek2pCvw0AdQAAAAwBmpNqQr8NAHUAAAAMAZqTakK/DQB1AAAADAGelGpCvw0AdQAAABtBmo5JqEFomUwIf/3X/AjfEAAAAwGelWpCvw0AABdxBmmtJqEFomUwIf/+p4QAAACfQZ6LRREsK/8NAAAAADAGejUUK/DQB1AAAAAwBno9FCvw0AdQAAAAMAZ6JRQr8NAHUAAAAMAZqURQr8NAHUAAAAMAZqVVCvw0AdQAAAAwBnpVVCvw0AdQAAAAwBnpdVCvw0AdQAAAAwBnp1VCvw0AdQAAAAwBmpZVCvw0AdQAAAAwBnpZVCvw0AdQAAAAwBmpxlCvw0AdQAAAAwBnpdlCvw0AdQAAAAwBnpdlCvw0AdQAAABtBmplJqEFsmUwIf/3X/AjfEAAAAwGep3YCvw0AAA==';
+                // Criando uma tag de áudio para conectar ao YouTube
+                const audioElement = document.createElement('audio');
+                audioElement.crossOrigin = "anonymous";
                 
-                // Criar um nó de áudio para o YouTube
-                youtubeAudioSource = audioContext.createMediaElementSource(videoElement);
-                youtubeAudioSource.connect(analyser);
+                // Uma abordagem alternativa é usar o YouTube-audio-stream ou 
+                // outro serviço que possa fornecer apenas o áudio
+                // Exemplo: /proxy-youtube-audio?videoId=VIDEO_ID
+                const videoId = youtubePlayer.getVideoData().video_id;
                 
-                // Inicie a reprodução do vídeo no YouTube
-                youtubePlayer.playVideo();
+                // Vamos usar uma estratégia diferente - como não podemos acessar 
+                // o áudio diretamente, vamos usar a API Web Audio para capturar 
+                // o som que sai dos alto-falantes
                 
-                // Também podemos usar um stream de áudio vazio como fallback se necessário
-                if (!youtubeAudioSource) {
+                // Método 2: Capturar áudio da saída do sistema
+                if (navigator.mediaDevices.getDisplayMedia) {
+                    mediaStream = await navigator.mediaDevices.getDisplayMedia({
+                        video: true,
+                        audio: true
+                    });
+                    
+                    // Verificar se temos faixas de áudio
+                    const audioTracks = mediaStream.getAudioTracks();
+                    if (audioTracks.length === 0) {
+                        throw new Error('Sem faixas de áudio disponíveis. Compartilhe o áudio do sistema ao compartilhar a tela.');
+                    }
+                    
+                    // Mostrar instrução para o usuário
+                    alert('Por favor, compartilhe a aba ou janela onde o YouTube está tocando E selecione "Compartilhar áudio"');
+                    
+                    // Pausar o vídeo até que o usuário configure o compartilhamento
+                    youtubePlayer.pauseVideo();
+                    
+                    // Depois de alguns segundos, iniciar a reprodução
+                    setTimeout(() => {
+                        youtubePlayer.playVideo();
+                    }, 3000);
+                    
+                    audioSource = audioContext.createMediaStreamSource(mediaStream);
+                    audioSource.connect(analyser);
+                }
+                else {
+                    // Fallback para navegadores que não suportam getDisplayMedia
+                    // Criar um oscilador para testar a visualização
                     const oscillator = audioContext.createOscillator();
+                    oscillator.type = 'sine';
                     oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
                     oscillator.connect(analyser);
                     oscillator.start();
+                    
+                    alert('Seu navegador não suporta compartilhamento de áudio. Usando tom de teste.');
                 }
             } else {
                 switch (selectedSource) {
@@ -166,9 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 audioSource.connect(analyser);
             }
             
-            // Não conecte ao destination para evitar feedback
-            // analyser.connect(audioContext.destination);
-            
+            // Começar a visualização
             startVisualization();
             isCapturing = true;
         } catch (error) {
@@ -215,13 +247,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Iniciar visualização de áudio
     function startVisualization() {
-        const activeTab = document.querySelector('.tab-pane.active').id;
-        
         function animate() {
             animationFrameId = requestAnimationFrame(animate);
             
             if (!analyser) return;
             
+            // Verificar qual guia está ativa em cada quadro de animação
+            const activeTab = document.querySelector('.tab-pane.active').id;
+            
+            // Renderizar a visualização apropriada com base na guia ativa atual
             switch (activeTab) {
                 case 'oscilloscope':
                     oscilloscope.visualize(analyser);
@@ -239,6 +273,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Alternar abas
+    // Substitua esta função no seu código:
     function switchTab(tabId) {
         tabButtons.forEach(btn => {
             btn.classList.toggle('active', btn.dataset.tab === tabId);
@@ -248,11 +283,14 @@ document.addEventListener('DOMContentLoaded', function() {
             pane.classList.toggle('active', pane.id === tabId);
         });
         
-        // Reiniciar a visualização se estiver capturando
+        // Remova esta parte que reinicia a visualização ao trocar de guia
+        // Não é mais necessário reiniciar, pois agora verificamos a guia ativa em cada quadro
+        /* 
         if (isCapturing && animationFrameId) {
             cancelAnimationFrame(animationFrameId);
             startVisualization();
         }
+        */
     }
     
     // Inicializar o osciloscópio
