@@ -45,21 +45,24 @@
             </div>
         </div>
 
-        <div class="visualizer-container">
-            <div class="tabs">
-                <button class="tab-btn active" data-tab="oscilloscope">Osciloscópio</button>
-                <button class="tab-btn" data-tab="spectrogram">Espectrograma 3D</button>
-                <button class="tab-btn" data-tab="vu-meter">VU Meters</button>
-            </div>
-
-            <div class="tab-content">
-                <div id="oscilloscope" class="tab-pane active">
+        <div class="visualizers-grid">
+            <div class="visualizer-card" id="oscilloscope">
+                <h3 class="visualizer-title">Osciloscópio</h3>
+                <div class="visualizer-content">
                     <canvas id="oscilloscope-canvas"></canvas>
                 </div>
-                <div id="spectrogram" class="tab-pane">
+            </div>
+            
+            <div class="visualizer-card" id="spectrogram">
+                <h3 class="visualizer-title">Espectrograma 3D</h3>
+                <div class="visualizer-content">
                     <div id="spectrogram-container"></div>
                 </div>
-                <div id="vu-meter" class="tab-pane">
+            </div>
+            
+            <div class="visualizer-card" id="vu-meter">
+                <h3 class="visualizer-title">VU Meters</h3>
+                <div class="visualizer-content">
                     <div class="vu-meters">
                         <div class="vu-meter left">
                             <div class="meter-label">L</div>

@@ -2,8 +2,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Elementos da UI
     const startButton = document.getElementById('start-audio');
     const audioSourceSelect = document.getElementById('audio-source');
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    const tabPanes = document.querySelectorAll('.tab-pane');
     const themeSwitch = document.getElementById('theme-switch');
     const youtubeSearchInput = document.getElementById('youtube-search-input');
     const youtubeSearchBtn = document.getElementById('youtube-search-btn');
@@ -42,9 +40,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Listeners de eventos
     startButton.addEventListener('click', toggleAudioCapture);
     audioSourceSelect.addEventListener('change', changeAudioSource);
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => switchTab(button.dataset.tab));
-    });
     themeSwitch.addEventListener('change', toggleTheme);
     youtubeSearchBtn.addEventListener('click', searchYouTube);
     youtubeSearchInput.addEventListener('keypress', function(e) {
@@ -73,6 +68,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Exibir ou ocultar o player do YouTube dependendo da fonte de áudio selecionada
         updateYouTubeVisibility();
+        
+        // Iniciar animações em estado padrão
+        startVisualization();
     }
     
     // Atualizar visibilidade da seção do YouTube
@@ -106,7 +104,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Iniciar captura de áudio
-    // Substituir essa parte no seu código:
     async function startAudioCapture() {
         const selectedSource = audioSourceSelect.value;
         
@@ -200,8 +197,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 audioSource.connect(analyser);
             }
             
-            // Começar a visualização
-            startVisualization();
             isCapturing = true;
         } catch (error) {
             throw error;
@@ -210,11 +205,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Parar captura de áudio
     function stopAudioCapture() {
-        if (animationFrameId) {
-            cancelAnimationFrame(animationFrameId);
-            animationFrameId = null;
-        }
-        
         if (mediaStream) {
             mediaStream.getTracks().forEach(track => track.stop());
             mediaStream = null;
@@ -250,47 +240,13 @@ document.addEventListener('DOMContentLoaded', function() {
         function animate() {
             animationFrameId = requestAnimationFrame(animate);
             
-            if (!analyser) return;
-            
-            // Verificar qual guia está ativa em cada quadro de animação
-            const activeTab = document.querySelector('.tab-pane.active').id;
-            
-            // Renderizar a visualização apropriada com base na guia ativa atual
-            switch (activeTab) {
-                case 'oscilloscope':
-                    oscilloscope.visualize(analyser);
-                    break;
-                case 'spectrogram':
-                    spectrogram.visualize(analyser);
-                    break;
-                case 'vu-meter':
-                    vuMeter.visualize(analyser);
-                    break;
-            }
+            // Atualizar todos os visualizadores simultaneamente
+            oscilloscope.visualize(analyser);
+            spectrogram.visualize(analyser);
+            vuMeter.visualize(analyser);
         }
         
         animate();
-    }
-    
-    // Alternar abas
-    // Substitua esta função no seu código:
-    function switchTab(tabId) {
-        tabButtons.forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tabId);
-        });
-        
-        tabPanes.forEach(pane => {
-            pane.classList.toggle('active', pane.id === tabId);
-        });
-        
-        // Remova esta parte que reinicia a visualização ao trocar de guia
-        // Não é mais necessário reiniciar, pois agora verificamos a guia ativa em cada quadro
-        /* 
-        if (isCapturing && animationFrameId) {
-            cancelAnimationFrame(animationFrameId);
-            startVisualization();
-        }
-        */
     }
     
     // Inicializar o osciloscópio
@@ -310,33 +266,38 @@ document.addEventListener('DOMContentLoaded', function() {
         
         oscilloscope = {
             visualize: function(analyser) {
-                const bufferLength = analyser.fftSize;
-                const dataArray = new Float32Array(bufferLength);
-                
-                analyser.getFloatTimeDomainData(dataArray);
-                
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.lineWidth = 2;
                 ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent-color');
                 ctx.beginPath();
                 
-                const sliceWidth = canvas.width / bufferLength;
-                let x = 0;
-                
-                for (let i = 0; i < bufferLength; i++) {
-                    const v = dataArray[i] * 3;
-                    const y = (v * canvas.height / 2) + canvas.height / 2;
+                if (analyser) {
+                    const bufferLength = analyser.fftSize;
+                    const dataArray = new Float32Array(bufferLength);
+                    analyser.getFloatTimeDomainData(dataArray);
                     
-                    if (i === 0) {
-                        ctx.moveTo(x, y);
-                    } else {
-                        ctx.lineTo(x, y);
+                    const sliceWidth = canvas.width / bufferLength;
+                    let x = 0;
+                    
+                    for (let i = 0; i < bufferLength; i++) {
+                        // Reduzir a sensibilidade diminuindo o fator de multiplicação
+                        const v = dataArray[i] * 1.5;
+                        const y = (v * canvas.height / 2) + canvas.height / 2;
+                        
+                        if (i === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                        
+                        x += sliceWidth;
                     }
-                    
-                    x += sliceWidth;
+                } else {
+                    // Estado padrão - desenha uma linha reta no meio
+                    ctx.moveTo(0, canvas.height / 2);
+                    ctx.lineTo(canvas.width, canvas.height / 2);
                 }
                 
-                ctx.lineTo(canvas.width, canvas.height / 2);
                 ctx.stroke();
             }
         };
@@ -405,27 +366,33 @@ document.addEventListener('DOMContentLoaded', function() {
         
         spectrogram = {
             visualize: function(analyser) {
-                const bufferLength = analyser.frequencyBinCount;
-                const dataArray = new Uint8Array(bufferLength);
-                
-                analyser.getByteFrequencyData(dataArray);
-                
                 const positions = line.geometry.attributes.position.array;
                 
-                // Atualizar a altura de cada barra com base nos dados de frequência
-                for (let i = 0; i < divisions; i++) {
-                    // Mapeamento logarítmico para frequências para melhor visualização
-                    const index = Math.floor(i / divisions * (bufferLength / 2));
-                    const value = dataArray[index] / 255.0;
+                if (analyser) {
+                    const bufferLength = analyser.frequencyBinCount;
+                    const dataArray = new Uint8Array(bufferLength);
+                    analyser.getByteFrequencyData(dataArray);
                     
-                    // Atualizar posição Y (altura) da barra
-                    positions[i * 3 + 1] = value * 1.5;
+                    // Atualizar a altura de cada barra com base nos dados de frequência
+                    for (let i = 0; i < divisions; i++) {
+                        // Mapeamento logarítmico para frequências para melhor visualização
+                        const index = Math.floor(i / divisions * (bufferLength / 2));
+                        const value = dataArray[index] / 255.0;
+                        
+                        // Atualizar posição Y (altura) da barra
+                        positions[i * 3 + 1] = value * 1.5;
+                    }
+                } else {
+                    // Estado padrão - barras com altura zero
+                    for (let i = 0; i < divisions; i++) {
+                        positions[i * 3 + 1] = 0;
+                    }
                 }
                 
                 line.geometry.attributes.position.needsUpdate = true;
                 
-                // Rotacionar levemente para animar
-                line.rotation.y += 0.005;
+                // Sempre gira suavemente mesmo em estado padrão
+                line.rotation.y += 0.002;
                 
                 renderer.render(scene, camera);
             }
@@ -478,34 +445,40 @@ document.addEventListener('DOMContentLoaded', function() {
         
         vuMeter = {
             visualize: function(analyser) {
-                const bufferLength = analyser.fftSize;
-                const dataArray = new Float32Array(bufferLength);
-                
-                analyser.getFloatTimeDomainData(dataArray);
-                
-                // Calcular RMS (Root Mean Square) para cada canal
-                let sumLeft = 0;
-                let sumRight = 0;
-                
-                for (let i = 0; i < bufferLength; i += 2) {
-                    // Canal esquerdo (amostras pares)
-                    sumLeft += dataArray[i] * dataArray[i];
+                if (analyser) {
+                    const bufferLength = analyser.fftSize;
+                    const dataArray = new Float32Array(bufferLength);
                     
-                    // Canal direito (amostras ímpares)
-                    if (i + 1 < bufferLength) {
-                        sumRight += dataArray[i + 1] * dataArray[i + 1];
+                    analyser.getFloatTimeDomainData(dataArray);
+                    
+                    // Calcular RMS (Root Mean Square) para cada canal
+                    let sumLeft = 0;
+                    let sumRight = 0;
+                    
+                    for (let i = 0; i < bufferLength; i += 2) {
+                        // Canal esquerdo (amostras pares)
+                        sumLeft += dataArray[i] * dataArray[i];
+                        
+                        // Canal direito (amostras ímpares)
+                        if (i + 1 < bufferLength) {
+                            sumRight += dataArray[i + 1] * dataArray[i + 1];
+                        }
                     }
+                    
+                    const rmsLeft = Math.sqrt(sumLeft / (bufferLength / 2));
+                    const rmsRight = Math.sqrt(sumRight / (bufferLength / 2));
+                    
+                    // Converter para dB e atualizar os medidores
+                    const dbLeft = calculateDB(rmsLeft);
+                    const dbRight = calculateDB(rmsRight);
+                    
+                    updateMeter(leftMeterFill, leftMeterValue, dbLeft);
+                    updateMeter(rightMeterFill, rightMeterValue, dbRight);
+                } else {
+                    // Estado padrão - medidores em -60dB (mínimo)
+                    updateMeter(leftMeterFill, leftMeterValue, dbMin);
+                    updateMeter(rightMeterFill, rightMeterValue, dbMin);
                 }
-                
-                const rmsLeft = Math.sqrt(sumLeft / (bufferLength / 2));
-                const rmsRight = Math.sqrt(sumRight / (bufferLength / 2));
-                
-                // Converter para dB e atualizar os medidores
-                const dbLeft = calculateDB(rmsLeft);
-                const dbRight = calculateDB(rmsRight);
-                
-                updateMeter(leftMeterFill, leftMeterValue, dbLeft);
-                updateMeter(rightMeterFill, rightMeterValue, dbRight);
             }
         };
     }
