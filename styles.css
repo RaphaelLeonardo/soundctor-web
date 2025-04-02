@@ -425,6 +425,7 @@ select {
 /* Tema Toggle Switch */
 .theme-toggle {
   position: relative;
+  margin-left: 15px;
 }
 
 .theme-checkbox {
@@ -437,12 +438,14 @@ select {
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
-  width: 50px;
-  height: 26px;
+  width: 60px;
+  height: 30px;
   background: #ebebeb;
   border-radius: 100px;
   position: relative;
   transition: background-color 0.2s;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  border: 2px solid var(--border-color);
 }
 
 .theme-label .theme-icon {
@@ -453,9 +456,27 @@ select {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  transition: 0.2s;
+  transition: 0.3s;
   background: white;
-  box-shadow: 0 0 2px 0 rgba(10, 10, 10, 0.29);
+  box-shadow: 0 0 4px 0 rgba(10, 10, 10, 0.4);
+}
+
+.theme-label:before {
+  content: "☀️";
+  position: absolute;
+  left: 8px;
+  top: 5px;
+  font-size: 14px;
+  z-index: 1;
+}
+
+.theme-label:after {
+  content: "🌙";
+  position: absolute;
+  right: 8px;
+  top: 5px;
+  font-size: 14px;
+  z-index: 1;
 }
 
 .theme-checkbox:checked + .theme-label {

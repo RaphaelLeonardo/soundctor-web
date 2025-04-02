@@ -89,8 +89,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         audioSourceSelect.disabled = false;
         
-        // Exibir ou ocultar o player do YouTube dependendo da fonte de áudio selecionada
-        updateYouTubeVisibility();
+        // Garantir que o player do YouTube esteja oculto inicialmente
+        youtubePlayerContainer.classList.remove('active');
         
         // Iniciar animações em estado padrão
         startVisualization();
@@ -127,13 +127,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Atualizar visibilidade da seção do YouTube
     function updateYouTubeVisibility() {
         const isYouTubeSource = audioSourceSelect.value === 'youtube';
-        youtubePlayerContainer.style.display = isYouTubeSource ? 'block' : 'none';
         
-        if (isYouTubeSource && !youtubePlayerContainer.classList.contains('active')) {
-            youtubePlayerContainer.classList.add('active');
-        } else if (!isYouTubeSource && youtubePlayerContainer.classList.contains('active')) {
+        if (!isYouTubeSource) {
             youtubePlayerContainer.classList.remove('active');
         }
+        
+        // Não mostramos o player automaticamente ao selecionar YouTube como fonte
+        // Ele só aparecerá quando um vídeo for buscado e selecionado
     }
     
     // Alternar entre iniciar e parar a captura de áudio
@@ -979,14 +979,15 @@ document.addEventListener('DOMContentLoaded', function() {
             youtubeResults.appendChild(videoElement);
             youtubeVideoNodes.push(videoElement);
         });
-        
-        // Mostrar o player
-        youtubePlayerContainer.classList.add('active');
     }
     
     function loadYouTubeVideo(videoId) {
         if (youtubePlayer && youtubeApiReady) {
             youtubePlayer.loadVideoById(videoId);
+            
+            // Mostrar o player e esconder os resultados da busca
+            youtubePlayerContainer.classList.add('active');
+            youtubeResults.innerHTML = '';
             
             // Se a captura de áudio já estiver ativa e a fonte for o YouTube
             if (isCapturing && audioSourceSelect.value === 'youtube') {
