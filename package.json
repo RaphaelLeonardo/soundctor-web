@@ -1,0 +1,71 @@
+{
+  "name": "soundctor-web",
+  "version": "1.0.0",
+  "description": "Soundctor Web é um visualizador de áudio para navegador que permite capturar e visualizar o áudio de diferentes fontes em tempo real. Esta versão foi adaptada de uma extensão para Chrome para uma aplicação web independente.",
+  "main": "electron/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RaphaelLeonardo/soundctor-web.git"
+  },
+  "keywords": [
+    "audio",
+    "visualization",
+    "electron",
+    "spectrum",
+    "audio-visualizer"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RaphaelLeonardo/soundctor-web/issues"
+  },
+  "homepage": "https://github.com/RaphaelLeonardo/soundctor-web#readme",
+  "dependencies": {
+    "electron": "^35.1.2"
+  },
+  "devDependencies": {
+  },
+  "build": {
+    "appId": "com.raphael.soundctor",
+    "productName": "Soundctor",
+    "files": [
+      "**/*",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*.d.ts",
+      "!**/node_modules/.bin",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,__pycache__,thumbs.db,.gitignore,.gitattributes}",
+      "!**/{.travis.yml,.gitlab-ci.yml,.appveyor.yml}"
+    ],
+    "directories": {
+      "buildResources": "resources",
+      "output": "dist"
+    },
+    "win": {
+      "target": ["nsis"],
+      "icon": "resources/icon.ico"
+    },
+    "mac": {
+      "target": ["dmg"],
+      "icon": "resources/icon.icns",
+      "category": "public.app-category.music"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Audio"
+    }
+  }
+}

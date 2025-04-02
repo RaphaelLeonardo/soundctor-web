@@ -24,19 +24,47 @@ Soundctor Web é um visualizador de áudio para navegador que permite capturar e
 
 ## Como usar
 
-1. Abra o arquivo `index.html` no seu navegador
-2. Para usar visualização com YouTube:
+### Versão Electron (Recomendada)
+
+1. Instale as dependências:
+   ```
+   npm install
+   ```
+
+2. Execute a aplicação:
+   ```
+   npm start
+   ```
+   
+   Ou para modo desenvolvimento com ferramentas de desenvolvedor:
+   ```
+   npm run dev
+   ```
+
+3. Para usar visualização com YouTube:
    - Digite um termo de busca e clique em "Buscar"
    - Clique em uma miniatura para carregar o vídeo
    - Clique em "Iniciar Captura" com a opção "YouTube" selecionada
-3. Para usar outras fontes de áudio:
-   - Selecione a fonte desejada no menu dropdown
+
+4. Para usar outras fontes de áudio:
+   - Selecione a fonte desejada no menu dropdown (incluindo opções exclusivas do Electron para captura de áudio do sistema)
    - Clique no botão "Iniciar Captura"
    - Conceda as permissões necessárias quando solicitado
-4. Explore as diferentes visualizações através das abas
+
+5. Explore as diferentes visualizações
+
+### Versão Web (Navegador)
+
+1. Abra o arquivo `index.html` no seu navegador
+2. Siga as mesmas instruções acima, porém com funcionalidades limitadas de captura de áudio do sistema
 
 ## Requisitos
 
+### Versão Electron:
+- Node.js (versão recomendada: 14.x ou superior)
+- Electron (instalado como dependência)
+
+### Versão Web:
 - Navegador moderno com suporte às seguintes APIs:
   - Web Audio API
   - MediaDevices API (getUserMedia)
@@ -45,14 +73,20 @@ Soundctor Web é um visualizador de áudio para navegador que permite capturar e
 
 ## Configuração
 
-Para usar a função de busca do YouTube, você precisa:
+1. Para usar a função de busca do YouTube, você precisa:
+   - Obter uma chave da API do YouTube em https://console.cloud.google.com/
+   - Abrir o arquivo `app.js` e substituir a chave de API existente pela sua chave
 
-1. Obter uma chave da API do YouTube em https://console.cloud.google.com/
-2. Abrir o arquivo `app.js` e substituir `YOUR_API_KEY` pela sua chave de API
+2. Para construir uma versão distribuível da aplicação:
+   ```
+   npm install electron-builder --save-dev
+   npx electron-builder
+   ```
 
 ## Observações
 
-- A captura de áudio do sistema ou da aba pode requerer permissões adicionais do navegador
-- Para melhor desempenho, recomenda-se o uso do Google Chrome, Firefox ou Microsoft Edge
-- A visualização 3D utiliza a biblioteca Three.js
-- A funcionalidade de áudio do YouTube usa uma solução alternativa, pois o YouTube não fornece acesso direto ao stream de áudio
+- Na versão Electron, a captura de áudio do sistema é mais robusta e não exige os diálogos de permissão
+- Na versão Web, a captura de áudio do sistema ou da aba requer permissões adicionais do navegador
+- Para melhor desempenho na versão Web, recomenda-se o uso do Google Chrome, Firefox ou Microsoft Edge
+- A visualização 3D utiliza a biblioteca Three.js que já está incluída via CDN
+- A funcionalidade de áudio do YouTube usa técnicas diferentes para captura, dependendo se está no Electron ou em um navegador

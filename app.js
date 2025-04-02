@@ -1,3 +1,7 @@
+// Verificar se estamos no ambiente Electron
+const electronAPI = window.electron;
+let ipcRenderer = electronAPI ? electronAPI.ipcRenderer : null;
+
 document.addEventListener('DOMContentLoaded', function() {
     // Elementos da UI
     const startButton = document.getElementById('start-audio');
@@ -16,6 +20,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let animationFrameId;
     let isCapturing = false;
     
+    // Lista de fontes de áudio disponíveis
+    let systemAudioSources = [];
+    
     // YouTube API
     let youtubePlayer;
     let youtubeApiReady = false;
@@ -27,6 +34,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Configurações de visualização
     const FFT_SIZE = 2048;
     const SMOOTHING = 0.8;
+    
+    // Detecta se estamos executando em um ambiente Electron
+    const isElectron = () => {
+        return window.electron !== undefined || navigator.userAgent.indexOf('Electron') !== -1;
+    };
     
     // Inicializar tema
     initTheme();
@@ -64,6 +76,17 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        // Se estiver no Electron, adiciona as opções de fonte de áudio do sistema
+        if (isElectron()) {
+            populateAudioSources();
+            
+            // Adicionar um novo item ao menu para cada aplicativo com áudio
+            const systemOption = document.createElement('option');
+            systemOption.value = 'system-electron';
+            systemOption.text = 'Áudio do Sistema (Electron)';
+            audioSourceSelect.add(systemOption, 1); // Adiciona após o microfone
+        }
+        
         audioSourceSelect.disabled = false;
         
         // Exibir ou ocultar o player do YouTube dependendo da fonte de áudio selecionada
@@ -71,6 +94,34 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Iniciar animações em estado padrão
         startVisualization();
+    }
+    
+    // Obter fontes de áudio disponíveis no Electron
+    async function populateAudioSources() {
+        if (!isElectron() || !electronAPI) return;
+        
+        try {
+            // Obter fontes de áudio do processo principal do Electron
+            const sources = await electronAPI.desktopCapturer.getSources({
+                types: ['window', 'screen', 'audio'],
+                thumbnailSize: { width: 0, height: 0 },
+                fetchWindowIcons: true
+            });
+            
+            systemAudioSources = sources;
+            
+            // Adicionar cada fonte como uma opção no menu dropdown
+            systemAudioSources.forEach(source => {
+                const option = document.createElement('option');
+                option.value = source.id;
+                option.text = source.name || 'Sistema: ' + source.id;
+                audioSourceSelect.appendChild(option);
+            });
+            
+            console.log('Fontes de áudio carregadas:', systemAudioSources.length);
+        } catch (error) {
+            console.error('Erro ao obter fontes de áudio:', error);
+        }
     }
     
     // Atualizar visibilidade da seção do YouTube
@@ -98,7 +149,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 audioSourceSelect.disabled = true;
             } catch (error) {
                 console.error('Erro ao iniciar captura:', error);
-                alert('Não foi possível iniciar a captura de áudio: ' + error.message);
+                
+                // Mensagens de erro mais amigáveis dependendo do ambiente
+                let errorMessage = error.message;
+                
+                if (isElectron()) {
+                    if (error.message.includes('Permission denied') || error.message.includes('NotAllowedError')) {
+                        errorMessage = 'Permissão para capturar áudio foi negada. Por favor, reinicie o aplicativo e tente novamente.';
+                    } else if (error.message.includes('NotFoundError')) {
+                        errorMessage = 'Dispositivo de áudio não encontrado. Verifique suas configurações de áudio.';
+                    } else if (error.message.includes('NotReadableError')) {
+                        errorMessage = 'O dispositivo de áudio está em uso por outro aplicativo ou não está acessível.';
+                    }
+                }
+                
+                alert('Não foi possível iniciar a captura de áudio: ' + errorMessage);
             }
         }
     }
@@ -118,62 +183,155 @@ document.addEventListener('DOMContentLoaded', function() {
                     throw new Error('Player do YouTube não está pronto');
                 }
                 
-                // Método 1: Usar um elemento de áudio conectado a um proxy de áudio
-                // Crie um servidor proxy em seu backend ou use um serviço existente
-                // que possa extrair o áudio do YouTube e fornecer como stream de áudio
-                
-                // Criando uma tag de áudio para conectar ao YouTube
-                const audioElement = document.createElement('audio');
-                audioElement.crossOrigin = "anonymous";
-                
-                // Uma abordagem alternativa é usar o YouTube-audio-stream ou 
-                // outro serviço que possa fornecer apenas o áudio
-                // Exemplo: /proxy-youtube-audio?videoId=VIDEO_ID
-                const videoId = youtubePlayer.getVideoData().video_id;
-                
-                // Vamos usar uma estratégia diferente - como não podemos acessar 
-                // o áudio diretamente, vamos usar a API Web Audio para capturar 
-                // o som que sai dos alto-falantes
-                
-                // Método 2: Capturar áudio da saída do sistema
-                if (navigator.mediaDevices.getDisplayMedia) {
-                    mediaStream = await navigator.mediaDevices.getDisplayMedia({
-                        video: true,
-                        audio: true
-                    });
+                // No Electron, podemos capturar o áudio diretamente
+                if (isElectron()) {
+                    // Capturar a janela onde o YouTube está reproduzindo
+                    const constraints = {
+                        audio: {
+                            mandatory: {
+                                chromeMediaSource: 'desktop'
+                            }
+                        },
+                        video: {
+                            mandatory: {
+                                chromeMediaSource: 'desktop',
+                                minWidth: 1280,
+                                maxWidth: 1280,
+                                minHeight: 720,
+                                maxHeight: 720
+                            }
+                        }
+                    };
+                    
+                    // No Electron, podemos usar desktopCapturer diretamente
+                    mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
                     
                     // Verificar se temos faixas de áudio
                     const audioTracks = mediaStream.getAudioTracks();
                     if (audioTracks.length === 0) {
-                        throw new Error('Sem faixas de áudio disponíveis. Compartilhe o áudio do sistema ao compartilhar a tela.');
+                        throw new Error('Sem faixas de áudio disponíveis');
                     }
                     
-                    // Mostrar instrução para o usuário
-                    alert('Por favor, compartilhe a aba ou janela onde o YouTube está tocando E selecione "Compartilhar áudio"');
-                    
-                    // Pausar o vídeo até que o usuário configure o compartilhamento
-                    youtubePlayer.pauseVideo();
-                    
-                    // Depois de alguns segundos, iniciar a reprodução
-                    setTimeout(() => {
-                        youtubePlayer.playVideo();
-                    }, 3000);
+                    // Reproduzir o vídeo do YouTube
+                    youtubePlayer.playVideo();
                     
                     audioSource = audioContext.createMediaStreamSource(mediaStream);
                     audioSource.connect(analyser);
+                } else {
+                    // Método para navegadores: Capturar áudio da saída do sistema via getDisplayMedia
+                    if (navigator.mediaDevices.getDisplayMedia) {
+                        mediaStream = await navigator.mediaDevices.getDisplayMedia({
+                            video: true,
+                            audio: true
+                        });
+                        
+                        // Verificar se temos faixas de áudio
+                        const audioTracks = mediaStream.getAudioTracks();
+                        if (audioTracks.length === 0) {
+                            throw new Error('Sem faixas de áudio disponíveis. Compartilhe o áudio do sistema ao compartilhar a tela.');
+                        }
+                        
+                        // Mostrar instrução para o usuário
+                        alert('Por favor, compartilhe a aba ou janela onde o YouTube está tocando E selecione "Compartilhar áudio"');
+                        
+                        // Pausar o vídeo até que o usuário configure o compartilhamento
+                        youtubePlayer.pauseVideo();
+                        
+                        // Depois de alguns segundos, iniciar a reprodução
+                        setTimeout(() => {
+                            youtubePlayer.playVideo();
+                        }, 3000);
+                        
+                        audioSource = audioContext.createMediaStreamSource(mediaStream);
+                        audioSource.connect(analyser);
+                    }
+                    else {
+                        // Fallback para navegadores que não suportam getDisplayMedia
+                        // Criar um oscilador para testar a visualização
+                        const oscillator = audioContext.createOscillator();
+                        oscillator.type = 'sine';
+                        oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+                        oscillator.connect(analyser);
+                        oscillator.start();
+                        
+                        alert('Seu navegador não suporta compartilhamento de áudio. Usando tom de teste.');
+                    }
                 }
-                else {
-                    // Fallback para navegadores que não suportam getDisplayMedia
-                    // Criar um oscilador para testar a visualização
-                    const oscillator = audioContext.createOscillator();
-                    oscillator.type = 'sine';
-                    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
-                    oscillator.connect(analyser);
-                    oscillator.start();
-                    
-                    alert('Seu navegador não suporta compartilhamento de áudio. Usando tom de teste.');
+            } else if (selectedSource === 'system-electron' && isElectron()) {
+                // Captura de áudio do sistema via Electron
+                const constraints = {
+                    audio: {
+                        mandatory: {
+                            chromeMediaSource: 'desktop'
+                        }
+                    },
+                    video: {
+                        mandatory: {
+                            chromeMediaSource: 'desktop',
+                            minWidth: 1280,
+                            maxWidth: 1280,
+                            minHeight: 720,
+                            maxHeight: 720
+                        }
+                    }
+                };
+                
+                mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                // Verificar se temos faixas de áudio
+                const audioTracks = mediaStream.getAudioTracks();
+                if (audioTracks.length === 0) {
+                    throw new Error('Sem faixas de áudio disponíveis');
                 }
+                
+                // Pausar o YouTube se estiver reproduzindo
+                if (youtubePlayer && youtubePlayer.getPlayerState() === 1) {
+                    youtubePlayer.pauseVideo();
+                }
+                
+                audioSource = audioContext.createMediaStreamSource(mediaStream);
+                audioSource.connect(analyser);
+            } else if (selectedSource.startsWith('screen:') && isElectron()) {
+                // Capturar fonte de áudio específica selecionada no Electron
+                const sourceId = selectedSource;
+                
+                // Configurar restrições para capturar apenas o áudio da fonte selecionada
+                const constraints = {
+                    audio: {
+                        mandatory: {
+                            chromeMediaSource: 'desktop',
+                            chromeMediaSourceId: sourceId
+                        }
+                    },
+                    video: {
+                        mandatory: {
+                            chromeMediaSource: 'desktop',
+                            chromeMediaSourceId: sourceId,
+                            minWidth: 1280,
+                            maxWidth: 1280,
+                            minHeight: 720,
+                            maxHeight: 720
+                        }
+                    }
+                };
+                
+                mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                // Verificar se temos faixas de áudio
+                const audioTracks = mediaStream.getAudioTracks();
+                if (audioTracks.length === 0) {
+                    throw new Error('Sem faixas de áudio disponíveis na fonte selecionada');
+                }
+                
+                // Pausar o YouTube se estiver reproduzindo
+                if (youtubePlayer && youtubePlayer.getPlayerState() === 1) {
+                    youtubePlayer.pauseVideo();
+                }
+                
+                audioSource = audioContext.createMediaStreamSource(mediaStream);
+                audioSource.connect(analyser);
             } else {
+                // Métodos padrão para navegadores
                 switch (selectedSource) {
                     case 'microphone':
                         mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
