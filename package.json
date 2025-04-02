@@ -1,6 +1,6 @@
 {
   "name": "soundctor-web",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Soundctor Web é um visualizador de áudio para navegador que permite capturar e visualizar o áudio de diferentes fontes em tempo real. Esta versão foi adaptada de uma extensão para Chrome para uma aplicação web independente.",
   "main": "electron/main.js",
   "scripts": {
