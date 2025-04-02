@@ -7,6 +7,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const startButton = document.getElementById('start-audio');
     const audioSourceSelect = document.getElementById('audio-source');
     const themeSwitch = document.getElementById('theme-switch');
+    const themeSelectorBtn = document.getElementById('theme-selector-btn');
+    const themePalette = document.getElementById('theme-palette');
+    const themePresets = document.querySelectorAll('.theme-preset');
+    const applyCustomThemeBtn = document.getElementById('apply-custom-theme');
     const youtubeSearchInput = document.getElementById('youtube-search-input');
     const youtubeSearchBtn = document.getElementById('youtube-search-btn');
     const youtubeResults = document.getElementById('youtube-results');
@@ -40,8 +44,16 @@ document.addEventListener('DOMContentLoaded', function() {
         return window.electron !== undefined || navigator.userAgent.indexOf('Electron') !== -1;
     };
     
+    // Detecta se estamos no macOS (se estiver no Electron)
+    const isMacOS = () => {
+        return isElectron() && window.electron && window.electron.process.platform === 'darwin';
+    };
+    
     // Inicializar tema
     initTheme();
+    
+    // Inicializar cores do tema
+    initColorPickers();
     
     // Verificar se a YouTube API está pronta
     window.onYouTubeIframeAPIReady = function() {
@@ -53,10 +65,24 @@ document.addEventListener('DOMContentLoaded', function() {
     startButton.addEventListener('click', toggleAudioCapture);
     audioSourceSelect.addEventListener('change', changeAudioSource);
     themeSwitch.addEventListener('change', toggleTheme);
+    themeSelectorBtn.addEventListener('click', toggleThemePalette);
+    themePresets.forEach(preset => {
+        preset.addEventListener('click', () => applyThemePreset(preset.dataset.theme));
+    });
+    applyCustomThemeBtn.addEventListener('click', applyCustomTheme);
     youtubeSearchBtn.addEventListener('click', searchYouTube);
     youtubeSearchInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             searchYouTube();
+        }
+    });
+    
+    // Fechar o seletor de tema ao clicar fora
+    document.addEventListener('click', function(e) {
+        if (themePalette.classList.contains('show') && 
+            !themePalette.contains(e.target) && 
+            e.target !== themeSelectorBtn) {
+            themePalette.classList.remove('show');
         }
     });
     
@@ -144,6 +170,12 @@ document.addEventListener('DOMContentLoaded', function() {
             audioSourceSelect.disabled = false;
         } else {
             try {
+                // Verificar se é macOS e selecionou instruções
+                if (isMacOS() && audioSourceSelect.value === 'macos-instructions') {
+                    showMacOSInstructions();
+                    return;
+                }
+                
                 await startAudioCapture();
                 startButton.textContent = 'Parar Captura';
                 audioSourceSelect.disabled = true;
@@ -161,11 +193,96 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else if (error.message.includes('NotReadableError')) {
                         errorMessage = 'O dispositivo de áudio está em uso por outro aplicativo ou não está acessível.';
                     }
+                    
+                    // Mensagens específicas para macOS
+                    if (isMacOS() && error.message.includes('audio capture')) {
+                        errorMessage = 'Captura de áudio no macOS requer uma ferramenta externa como Soundflower ou BlackHole. Consulte as instruções.';
+                    }
                 }
                 
                 alert('Não foi possível iniciar a captura de áudio: ' + errorMessage);
             }
         }
+    }
+    
+    // Exibe instruções específicas para captura de áudio no macOS
+    function showMacOSInstructions() {
+        // Criar elemento de diálogo modal
+        const modal = document.createElement('div');
+        modal.style.position = 'fixed';
+        modal.style.left = '0';
+        modal.style.top = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        modal.style.display = 'flex';
+        modal.style.justifyContent = 'center';
+        modal.style.alignItems = 'center';
+        modal.style.zIndex = '1000';
+        
+        const content = document.createElement('div');
+        content.style.backgroundColor = 'var(--card-bg)';
+        content.style.color = 'var(--text-color)';
+        content.style.padding = '30px';
+        content.style.borderRadius = 'var(--border-radius)';
+        content.style.maxWidth = '600px';
+        content.style.width = '80%';
+        content.style.maxHeight = '80vh';
+        content.style.overflowY = 'auto';
+        content.style.boxShadow = 'var(--box-shadow)';
+        
+        content.innerHTML = `
+            <h2 style="color: var(--primary-color); margin-top: 0;">Captura de Áudio no macOS</h2>
+            <p>Devido a limitações do macOS, a captura de áudio do sistema requer um driver de áudio virtual como:</p>
+            <ul>
+                <li><strong>BlackHole</strong> - <a href="https://github.com/ExistentialAudio/BlackHole" target="_blank">Baixar</a></li>
+                <li><strong>Soundflower</strong> - <a href="https://github.com/mattingalls/Soundflower" target="_blank">Baixar</a></li>
+                <li><strong>Loopback</strong> - <a href="https://rogueamoeba.com/loopback/" target="_blank">Baixar (Pago)</a></li>
+            </ul>
+            
+            <h3>Configuração:</h3>
+            <ol>
+                <li>Instale um dos drivers de áudio virtual mencionados acima</li>
+                <li>Nas Preferências de Som do macOS, configure a saída para o dispositivo virtual</li>
+                <li>No Soundctor, selecione o mesmo dispositivo virtual como fonte de entrada</li>
+                <li>Todo áudio do sistema será roteado para o dispositivo virtual, permitindo a captura</li>
+            </ol>
+            
+            <h3>Notas:</h3>
+            <p>Para ouvir o áudio enquanto o captura, você pode:</p>
+            <ul>
+                <li>Usar um Dispositivo Agregado nas Preferências de Som</li>
+                <li>Ou definir o monitor do aplicativo de áudio virtual para reproduzir áudio nos seus alto-falantes</li>
+            </ul>
+            
+            <p style="margin-top: 20px;">Esta limitação é do macOS e requer uma extensão de kernel assinada para acessar o áudio do sistema, que o Electron não fornece.</p>
+            
+            <button id="close-macos-instructions" style="
+                background-color: var(--primary-color);
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: var(--border-radius);
+                margin-top: 20px;
+                cursor: pointer;
+                font-weight: bold;
+            ">Entendi</button>
+        `;
+        
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+        
+        // Fechar ao clicar no botão
+        document.getElementById('close-macos-instructions').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+        
+        // Também fechar ao clicar fora
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
     }
     
     // Iniciar captura de áudio
@@ -178,6 +295,11 @@ document.addEventListener('DOMContentLoaded', function() {
         analyser.smoothingTimeConstant = SMOOTHING;
         
         try {
+            // Verificar fontes específicas para macOS
+            if (isMacOS() && selectedSource.startsWith('macos-')) {
+                return await startMacOSAudioCapture(selectedSource);
+            }
+            
             if (selectedSource === 'youtube') {
                 if (!youtubePlayer || !youtubeApiReady) {
                     throw new Error('Player do YouTube não está pronto');
@@ -358,6 +480,69 @@ document.addEventListener('DOMContentLoaded', function() {
             isCapturing = true;
         } catch (error) {
             throw error;
+        }
+    }
+    
+    // Função específica para captura de áudio no macOS
+    async function startMacOSAudioCapture(selectedSource) {
+        // Se for o botão de instruções, mostrar diálogo
+        if (selectedSource === 'macos-instructions') {
+            showMacOSInstructions();
+            return;
+        }
+        
+        try {
+            // Para captura via dispositivo virtual no macOS, usamos getUserMedia normal
+            // mas com uma explicação específica para o usuário sobre como configurar
+            
+            // Primeiro, mostrar dicas sobre como configurar o dispositivo
+            let toolName = "";
+            switch(selectedSource) {
+                case 'macos-soundflower':
+                    toolName = "Soundflower";
+                    break;
+                case 'macos-blackhole':
+                    toolName = "BlackHole";
+                    break;
+                case 'macos-loopback':
+                    toolName = "Loopback";
+                    break;
+                case 'macos-aggregate-device':
+                    toolName = "Aggregate Device";
+                    break;
+            }
+            
+            // Mostrar instruções específicas para o dispositivo selecionado
+            alert(`Para capturar áudio usando ${toolName}:\n\n` +
+                  `1. Verifique se o ${toolName} está instalado e configurado\n` +
+                  `2. Nas Preferências de Som do macOS, configure a SAÍDA para o ${toolName}\n` +
+                  `3. O áudio do sistema será roteado para o dispositivo virtual\n` +
+                  `4. Soundctor vai capturar o áudio a partir deste dispositivo\n\n` +
+                  `Prosseguindo com a captura...`);
+            
+            // Tentar capturar o áudio do dispositivo
+            mediaStream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    // Algumas opções para melhorar a captura
+                    echoCancellation: false,
+                    noiseSuppression: false,
+                    autoGainControl: false
+                } 
+            });
+            
+            // Pausar o YouTube se estiver reproduzindo
+            if (youtubePlayer && youtubePlayer.getPlayerState() === 1) {
+                youtubePlayer.pauseVideo();
+            }
+            
+            audioSource = audioContext.createMediaStreamSource(mediaStream);
+            audioSource.connect(analyser);
+            
+            isCapturing = true;
+        } catch (error) {
+            // Se falhar, mostre as instruções de configuração completas
+            showMacOSInstructions();
+            throw new Error(`Erro ao capturar áudio no macOS: ${error.message}. Verifique se o dispositivo virtual está configurado corretamente.`);
         }
     }
     
@@ -846,27 +1031,50 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     analyser.getFloatTimeDomainData(dataArray);
                     
-                    // Calcular RMS (Root Mean Square) para cada canal
-                    let sumLeft = 0;
-                    let sumRight = 0;
+                    // Dividir os dados em canais separados (esquerdo e direito)
+                    const leftChannelData = new Float32Array(bufferLength/2);
+                    const rightChannelData = new Float32Array(bufferLength/2);
                     
-                    for (let i = 0; i < bufferLength; i += 2) {
-                        // Canal esquerdo (amostras pares)
-                        sumLeft += dataArray[i] * dataArray[i];
+                    // Separar os dados de forma adequada
+                    // O WebAudio API usa dados intercalados: [L, R, L, R, L, R, ...]
+                    for (let i = 0; i < bufferLength/2; i++) {
+                        // Índice entrelaceado: L (0,2,4...) e R (1,3,5...)
+                        const leftIndex = i * 2;
+                        const rightIndex = i * 2 + 1;
                         
-                        // Canal direito (amostras ímpares)
-                        if (i + 1 < bufferLength) {
-                            sumRight += dataArray[i + 1] * dataArray[i + 1];
+                        // Verificar se os índices são válidos
+                        if (leftIndex < bufferLength) {
+                            leftChannelData[i] = dataArray[leftIndex];
+                        }
+                        
+                        if (rightIndex < bufferLength) {
+                            rightChannelData[i] = dataArray[rightIndex];
                         }
                     }
                     
-                    const rmsLeft = Math.sqrt(sumLeft / (bufferLength / 2));
-                    const rmsRight = Math.sqrt(sumRight / (bufferLength / 2));
+                    // Calcular RMS (Root Mean Square) para cada canal separadamente
+                    let sumLeft = 0;
+                    let sumRight = 0;
+                    
+                    for (let i = 0; i < leftChannelData.length; i++) {
+                        // Elevar ao quadrado cada amostra
+                        sumLeft += leftChannelData[i] * leftChannelData[i];
+                    }
+                    
+                    for (let i = 0; i < rightChannelData.length; i++) {
+                        // Elevar ao quadrado cada amostra
+                        sumRight += rightChannelData[i] * rightChannelData[i];
+                    }
+                    
+                    // Calcular RMS final para cada canal
+                    const rmsLeft = Math.sqrt(sumLeft / leftChannelData.length);
+                    const rmsRight = Math.sqrt(sumRight / rightChannelData.length);
                     
                     // Converter para dB e atualizar os medidores
                     const dbLeft = calculateDB(rmsLeft);
                     const dbRight = calculateDB(rmsRight);
                     
+                    // Atualizar medidores com valores específicos de cada canal
                     updateMeter(leftMeterFill, leftMeterValue, dbLeft);
                     updateMeter(rightMeterFill, rightMeterValue, dbRight);
                 } else {
@@ -878,7 +1086,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
     
-    // Configurações de tema (claro/escuro)
+    // Configurações de tema (claro/escuro e cores)
     function initTheme() {
         // Verificar preferência do sistema
         const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -886,15 +1094,133 @@ document.addEventListener('DOMContentLoaded', function() {
         // Verificar se há tema salvo
         const savedTheme = localStorage.getItem('theme');
         const isDarkMode = savedTheme === 'dark' || (savedTheme === null && prefersDarkMode);
+        const savedThemeType = localStorage.getItem('themeType') || 'default';
         
-        document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+        // Aplicar tema salvo
+        if (savedThemeType !== 'default' && savedThemeType !== 'dark') {
+            document.documentElement.setAttribute('data-theme', savedThemeType);
+            updateActiveThemeButton(savedThemeType);
+        } else {
+            document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'default');
+            updateActiveThemeButton(isDarkMode ? 'dark' : 'default');
+        }
+        
         themeSwitch.checked = isDarkMode;
+        
+        // Aplicar cores personalizadas salvas
+        const customColors = JSON.parse(localStorage.getItem('customColors'));
+        if (customColors) {
+            Object.keys(customColors).forEach(prop => {
+                document.documentElement.style.setProperty(`--${prop}`, customColors[prop]);
+                
+                // Atualizar valores dos pickers
+                const picker = document.getElementById(prop);
+                if (picker) {
+                    picker.value = customColors[prop];
+                }
+            });
+        }
+    }
+    
+    function initColorPickers() {
+        // Valores iniciais para os pickers
+        document.getElementById('primary-color').value = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
+        document.getElementById('accent-color').value = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim();
+        document.getElementById('background-color').value = getComputedStyle(document.documentElement).getPropertyValue('--background-color').trim();
+        document.getElementById('text-color').value = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim();
     }
     
     function toggleTheme() {
         const isDarkMode = themeSwitch.checked;
-        document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
-        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        
+        // Mantém o tema específico, só alternando entre claro/escuro
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const isCustomTheme = !['default', 'dark'].includes(currentTheme);
+        
+        if (!isCustomTheme) {
+            const newTheme = isDarkMode ? 'dark' : 'default';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+            localStorage.setItem('themeType', newTheme);
+            updateActiveThemeButton(newTheme);
+        }
+    }
+    
+    function toggleThemePalette(e) {
+        e.stopPropagation();
+        themePalette.classList.toggle('show');
+    }
+    
+    function applyThemePreset(theme) {
+        // Remover tema atual
+        document.documentElement.removeAttribute('data-theme');
+        
+        // Limpar cores personalizadas
+        document.documentElement.style.removeProperty('--primary-color');
+        document.documentElement.style.removeProperty('--accent-color');
+        document.documentElement.style.removeProperty('--background-color');
+        document.documentElement.style.removeProperty('--card-bg');
+        document.documentElement.style.removeProperty('--border-color');
+        document.documentElement.style.removeProperty('--text-color');
+        document.documentElement.style.removeProperty('--text-secondary');
+        document.documentElement.style.removeProperty('--meter-bg');
+        
+        // Aplicar novo tema
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('themeType', theme);
+        
+        // Atualizar switch claro/escuro
+        if (theme === 'dark') {
+            themeSwitch.checked = true;
+            localStorage.setItem('theme', 'dark');
+        } else if (theme === 'default') {
+            themeSwitch.checked = false;
+            localStorage.setItem('theme', 'light');
+        }
+        
+        // Atualizar valores dos pickers para refletir o novo tema
+        initColorPickers();
+        
+        // Atualizar botão ativo
+        updateActiveThemeButton(theme);
+        
+        // Remover cores personalizadas salvas
+        localStorage.removeItem('customColors');
+    }
+    
+    function updateActiveThemeButton(theme) {
+        themePresets.forEach(preset => {
+            preset.classList.toggle('active', preset.dataset.theme === theme);
+        });
+    }
+    
+    function applyCustomTheme() {
+        const primaryColor = document.getElementById('primary-color').value;
+        const accentColor = document.getElementById('accent-color').value;
+        const backgroundColor = document.getElementById('background-color').value;
+        const textColor = document.getElementById('text-color').value;
+        
+        // Salvar valores personalizados
+        const customColors = {
+            'primary-color': primaryColor,
+            'accent-color': accentColor,
+            'background-color': backgroundColor,
+            'text-color': textColor
+        };
+        
+        // Aplicar cores diretamente nas variáveis CSS
+        Object.keys(customColors).forEach(prop => {
+            document.documentElement.style.setProperty(`--${prop}`, customColors[prop]);
+        });
+        
+        // Salvar no localStorage
+        localStorage.setItem('customColors', JSON.stringify(customColors));
+        
+        // Fechar a paleta
+        themePalette.classList.remove('show');
+        
+        // Remover seleção de tema predefinido
+        themePresets.forEach(preset => preset.classList.remove('active'));
     }
     
     // Funções relacionadas ao YouTube

@@ -16,6 +16,7 @@
   --border-radius: 8px;
 }
 
+/* Temas pré-definidos */
 [data-theme="dark"] {
   --background-color: #232323;
   --card-bg: #2d2d2d;
@@ -24,6 +25,50 @@
   --text-secondary: #bbbbbb;
   --meter-bg: #3d3d3d;
   --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="blue"] {
+  --primary-color: #1976d2;
+  --accent-color: #0d47a1;
+  --background-color: #e3f2fd;
+  --card-bg: #ffffff;
+  --border-color: #bbdefb;
+  --text-color: #0d47a1;
+  --text-secondary: #1565c0;
+  --meter-bg: #e3f2fd;
+}
+
+[data-theme="purple"] {
+  --primary-color: #7b1fa2;
+  --accent-color: #4a148c;
+  --background-color: #f3e5f5;
+  --card-bg: #ffffff;
+  --border-color: #e1bee7;
+  --text-color: #4a148c;
+  --text-secondary: #6a1b9a;
+  --meter-bg: #f3e5f5;
+}
+
+[data-theme="green"] {
+  --primary-color: #388e3c;
+  --accent-color: #1b5e20;
+  --background-color: #e8f5e9;
+  --card-bg: #ffffff;
+  --border-color: #c8e6c9;
+  --text-color: #1b5e20;
+  --text-secondary: #2e7d32;
+  --meter-bg: #e8f5e9;
+}
+
+[data-theme="orange"] {
+  --primary-color: #f57c00;
+  --accent-color: #e65100;
+  --background-color: #fff3e0;
+  --card-bg: #ffffff;
+  --border-color: #ffe0b2;
+  --text-color: #e65100;
+  --text-secondary: #ef6c00;
+  --meter-bg: #fff3e0;
 }
 
 * {
@@ -422,10 +467,15 @@ select {
   color: var(--text-color);
 }
 
-/* Tema Toggle Switch */
+/* Tema Controls */
+.theme-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 .theme-toggle {
   position: relative;
-  margin-left: 15px;
 }
 
 .theme-checkbox {
@@ -486,6 +536,160 @@ select {
 .theme-checkbox:checked + .theme-label .theme-icon {
   left: calc(100% - 23px);
   background: #404040;
+}
+
+/* Theme Selector */
+.theme-selector {
+  position: relative;
+}
+
+.theme-selector-btn {
+  background-color: var(--primary-color);
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.theme-selector-btn .material-icons {
+  font-size: 16px;
+  color: white;
+}
+
+.theme-palette {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 10px;
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: 10px;
+  z-index: 100;
+  display: none;
+  width: 240px;
+}
+
+.theme-palette.show {
+  display: block;
+}
+
+.theme-presets {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.theme-preset {
+  width: 100%;
+  padding: 8px;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.theme-preset:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.theme-preset.active {
+  border: 2px solid var(--primary-color);
+}
+
+.theme-preset[data-theme="default"] {
+  background-color: #f5f5f5;
+  color: #333333;
+}
+
+.theme-preset[data-theme="dark"] {
+  background-color: #232323;
+  color: #f5f5f5;
+}
+
+.theme-preset[data-theme="blue"] {
+  background-color: #e3f2fd;
+  color: #0d47a1;
+}
+
+.theme-preset[data-theme="purple"] {
+  background-color: #f3e5f5;
+  color: #4a148c;
+}
+
+.theme-preset[data-theme="green"] {
+  background-color: #e8f5e9;
+  color: #1b5e20;
+}
+
+.theme-preset[data-theme="orange"] {
+  background-color: #fff3e0;
+  color: #e65100;
+}
+
+.theme-custom {
+  margin-top: 10px;
+}
+
+.theme-custom h4 {
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
+.color-pickers {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.color-picker-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.color-picker-item label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.color-picker-item input[type="color"] {
+  width: 100%;
+  height: 30px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: var(--card-bg);
+  cursor: pointer;
+}
+
+.apply-custom-theme {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.apply-custom-theme:hover {
+  background-color: var(--accent-color);
 }
 
 /* Footer */

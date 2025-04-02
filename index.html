@@ -14,11 +14,50 @@
     <div class="container">
         <header>
             <h1>Soundctor</h1>
-            <div class="theme-toggle">
-                <input type="checkbox" id="theme-switch" class="theme-checkbox">
-                <label for="theme-switch" class="theme-label">
-                    <span class="theme-icon"></span>
-                </label>
+            <div class="theme-controls">
+                <div class="theme-toggle">
+                    <input type="checkbox" id="theme-switch" class="theme-checkbox">
+                    <label for="theme-switch" class="theme-label">
+                        <span class="theme-icon"></span>
+                    </label>
+                </div>
+                <div class="theme-selector">
+                    <button class="theme-selector-btn" id="theme-selector-btn" title="Cores do Tema">
+                        <span class="material-icons">palette</span>
+                    </button>
+                    <div class="theme-palette" id="theme-palette">
+                        <div class="theme-presets">
+                            <button class="theme-preset active" data-theme="default">Padrão</button>
+                            <button class="theme-preset" data-theme="dark">Escuro</button>
+                            <button class="theme-preset" data-theme="blue">Azul</button>
+                            <button class="theme-preset" data-theme="purple">Roxo</button>
+                            <button class="theme-preset" data-theme="green">Verde</button>
+                            <button class="theme-preset" data-theme="orange">Laranja</button>
+                        </div>
+                        <div class="theme-custom">
+                            <h4>Cores Personalizadas</h4>
+                            <div class="color-pickers">
+                                <div class="color-picker-item">
+                                    <label for="primary-color">Cor Primária</label>
+                                    <input type="color" id="primary-color" value="#2962ff">
+                                </div>
+                                <div class="color-picker-item">
+                                    <label for="accent-color">Cor de Destaque</label>
+                                    <input type="color" id="accent-color" value="#0039cb">
+                                </div>
+                                <div class="color-picker-item">
+                                    <label for="background-color">Cor de Fundo</label>
+                                    <input type="color" id="background-color" value="#f5f5f5">
+                                </div>
+                                <div class="color-picker-item">
+                                    <label for="text-color">Cor do Texto</label>
+                                    <input type="color" id="text-color" value="#333333">
+                                </div>
+                            </div>
+                            <button class="apply-custom-theme" id="apply-custom-theme">Aplicar Cores</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </header>
 
