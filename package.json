@@ -4,6 +4,7 @@
   "description": "Soundctor Web é um visualizador de áudio para navegador que permite capturar e visualizar o áudio de diferentes fontes em tempo real. Esta versão foi adaptada de uma extensão para Chrome para uma aplicação web independente.",
   "main": "electron/main.js",
   "scripts": {
+    "build": "electron-builder",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron .",
     "dev": "electron . --dev",
@@ -31,9 +32,10 @@
   },
   "homepage": "https://github.com/RaphaelLeonardo/soundctor-web#readme",
   "dependencies": {
-    "electron": "^35.1.2"
   },
   "devDependencies": {
+    "electron-builder": "^26.0.12",
+    "electron": "^35.1.2"
   },
   "build": {
     "appId": "com.raphael.soundctor",
@@ -55,16 +57,23 @@
       "output": "dist"
     },
     "win": {
-      "target": ["nsis"],
+      "target": [
+        "nsis"
+      ],
       "icon": "resources/icon.ico"
     },
     "mac": {
-      "target": ["dmg"],
+      "target": [
+        "dmg"
+      ],
       "icon": "resources/icon.icns",
       "category": "public.app-category.music"
     },
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "category": "Audio"
     }
   }
