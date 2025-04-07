@@ -1006,8 +1006,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Configuração dos canvases para o VU Meter analógico
         if (leftAnalogCanvas) {
-            leftAnalogCanvas.width = 140;
-            leftAnalogCanvas.height = 140;
+            leftAnalogCanvas.width = 180;
+            leftAnalogCanvas.height = 180;
             
             // Inicializar os medidores analógicos com valor mínimo para serem visíveis
             if (leftAnalogCtx) {
@@ -1015,8 +1015,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         if (rightAnalogCanvas) {
-            rightAnalogCanvas.width = 140;
-            rightAnalogCanvas.height = 140;
+            rightAnalogCanvas.width = 180;
+            rightAnalogCanvas.height = 180;
             
             // Inicializar os medidores analógicos com valor mínimo para serem visíveis
             if (rightAnalogCtx) {
@@ -1139,9 +1139,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // Configurações do medidor analógico
             const radius = width * 0.35;
             
-            // Definição de ângulos
-            const startAngle = Math.PI; // 180 graus
-            const endAngle = 0; // 0 graus
+            // Definição de ângulos (para a parte superior, da esquerda para a direita)
+            const startAngle = Math.PI; // 180 graus (lado esquerdo)
+            const endAngle = 0; // 0 graus (lado direito)
             const angleRange = startAngle - endAngle;
             
             // Cores baseadas no tema atual
@@ -1153,6 +1153,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const warningColor = getComputedStyle(document.documentElement).getPropertyValue('--warning-color').trim();
             const dangerColor = getComputedStyle(document.documentElement).getPropertyValue('--danger-color').trim();
             
+            // Ajustar o centro do mostrador para ficar na parte superior
+            const meterCenterY = height * 0.4; // Movido para cima
+            
             // Desenhar moldura externa com cantos arredondados
             const outerRadius = radius * 1.4;
             ctx.beginPath();
@@ -1162,11 +1165,11 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.shadowOffsetX = 0;
             ctx.shadowOffsetY = 2;
             
-            // Usar um arco para desenhar um semicírculo para a parte superior
-            ctx.arc(centerX, centerY, outerRadius, Math.PI, 0, false);
+            // Usar um arco para desenhar um semicírculo para a parte SUPERIOR
+            ctx.arc(centerX, meterCenterY, outerRadius, Math.PI, 0, true);
             
-            // Completar o retângulo para a parte inferior
-            ctx.rect(centerX - outerRadius, centerY, outerRadius * 2, outerRadius * 0.3);
+            // Completar o retângulo para a parte superior
+            ctx.rect(centerX - outerRadius, meterCenterY - outerRadius * 0.3, outerRadius * 2, outerRadius * 0.3);
             ctx.fill();
             
             // Redefinir a sombra
@@ -1175,10 +1178,10 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.shadowOffsetX = 0;
             ctx.shadowOffsetY = 0;
             
-            // Desenhar o fundo do mostrador
+            // Desenhar o fundo do mostrador (em meterCenterY)
             const bgGradient = ctx.createRadialGradient(
-                centerX, centerY, 0,
-                centerX, centerY, radius
+                centerX, meterCenterY, 0,
+                centerX, meterCenterY, radius
             );
             
             // Usar cores mais suaves baseadas no tema
@@ -1189,20 +1192,20 @@ document.addEventListener('DOMContentLoaded', function() {
             
             ctx.beginPath();
             ctx.fillStyle = bgGradient;
-            ctx.arc(centerX, centerY, radius, Math.PI, 0, false);
+            ctx.arc(centerX, meterCenterY, radius, Math.PI, 0, true); // Semicírculo superior
             ctx.fill();
             
-            // Desenhar um pequeno gradiente circular no topo para dar profundidade
+            // Desenhar um pequeno gradiente circular na parte superior para dar profundidade
             const highlightGradient = ctx.createRadialGradient(
-                centerX, centerY - radius * 0.8, 0,
-                centerX, centerY - radius * 0.8, radius * 0.5
+                centerX, meterCenterY - radius * 0.8, 0,
+                centerX, meterCenterY - radius * 0.8, radius * 0.5
             );
             highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
             highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
             
             ctx.beginPath();
             ctx.fillStyle = highlightGradient;
-            ctx.arc(centerX, centerY, radius, Math.PI, 0, false);
+            ctx.arc(centerX, meterCenterY, radius, Math.PI, 0, true); // Semicírculo superior
             ctx.fill();
             
             // Definir propriedades gerais
@@ -1244,14 +1247,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 ctx.beginPath();
                 ctx.strokeStyle = segGradient;
                 ctx.lineWidth = radius * 0.15;
-                ctx.arc(centerX, centerY, radius * 0.85, segEndAngle, segStartAngle);
+                ctx.arc(centerX, meterCenterY, radius * 0.85, segEndAngle, segStartAngle);
                 ctx.stroke();
             });
             
             // Adicionar um efeito de brilho/reflexo por cima dos segmentos
             const glassGradient = ctx.createLinearGradient(
-                0, centerY - radius,
-                0, centerY
+                0, meterCenterY - radius,
+                0, meterCenterY
             );
             glassGradient.addColorStop(0, 'rgba(255, 255, 255, 0.12)');
             glassGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)');
@@ -1259,7 +1262,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             ctx.beginPath();
             ctx.fillStyle = glassGradient;
-            ctx.arc(centerX, centerY, radius * 0.95, Math.PI, 0, false);
+            ctx.arc(centerX, meterCenterY, radius * 0.95, Math.PI, 0, true);
             ctx.fill();
             
             // Desenhar marcações de nível principais
@@ -1291,9 +1294,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const innerRadius = radius * 0.85 - radius * 0.04;
                 
                 const x1 = centerX + Math.cos(angle) * outerRadius;
-                const y1 = centerY + Math.sin(angle) * outerRadius;
+                const y1 = meterCenterY + Math.sin(angle) * outerRadius;
                 const x2 = centerX + Math.cos(angle) * innerRadius;
-                const y2 = centerY + Math.sin(angle) * innerRadius;
+                const y2 = meterCenterY + Math.sin(angle) * innerRadius;
                 
                 ctx.beginPath();
                 ctx.lineWidth = 2;
@@ -1304,7 +1307,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Desenhar rótulos com valor em dB
                 const textRadius = radius * 0.65;
                 const textX = centerX + Math.cos(angle) * textRadius;
-                const textY = centerY + Math.sin(angle) * textRadius;
+                const textY = meterCenterY + Math.sin(angle) * textRadius;
                 ctx.fillText(mark.label, textX, textY);
             });
             
@@ -1320,9 +1323,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const innerRadius = radius * 0.85 - radius * 0.02;
                 
                 const x1 = centerX + Math.cos(angle) * outerRadius;
-                const y1 = centerY + Math.sin(angle) * outerRadius;
+                const y1 = meterCenterY + Math.sin(angle) * outerRadius;
                 const x2 = centerX + Math.cos(angle) * innerRadius;
-                const y2 = centerY + Math.sin(angle) * innerRadius;
+                const y2 = meterCenterY + Math.sin(angle) * innerRadius;
                 
                 ctx.beginPath();
                 ctx.lineWidth = 1;
@@ -1339,7 +1342,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.beginPath();
             ctx.strokeStyle = lightenColor(textColor, 30);
             ctx.lineWidth = 2;
-            ctx.arc(centerX, centerY, radius + radius * 0.2, Math.PI, 0, false);
+            ctx.arc(centerX, meterCenterY, radius + radius * 0.2, Math.PI, 0, true);
             ctx.stroke();
             
             // Desenhar a agulha com cor primária do tema
@@ -1353,10 +1356,10 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.shadowOffsetY = 1;
             ctx.strokeStyle = accentColor;
             ctx.lineWidth = 3;
-            ctx.moveTo(centerX, centerY);
+            ctx.moveTo(centerX, meterCenterY);
             ctx.lineTo(
                 centerX + Math.cos(angle) * needleLength,
-                centerY + Math.sin(angle) * needleLength
+                meterCenterY + Math.sin(angle) * needleLength
             );
             ctx.stroke();
             
@@ -1368,28 +1371,28 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Desenhar o pino central
             const centerGradient = ctx.createRadialGradient(
-                centerX - 2, centerY - 2, 0,
-                centerX, centerY, 8
+                centerX - 2, meterCenterY - 2, 0,
+                centerX, meterCenterY, 8
             );
             centerGradient.addColorStop(0, lightenColor(primaryColor, 40));
             centerGradient.addColorStop(1, primaryColor);
             
             ctx.beginPath();
             ctx.fillStyle = centerGradient;
-            ctx.arc(centerX, centerY, 8, 0, Math.PI * 2);
+            ctx.arc(centerX, meterCenterY, 8, 0, Math.PI * 2);
             ctx.fill();
             
             // Brilho do pino
             ctx.beginPath();
             ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-            ctx.arc(centerX - 2, centerY - 2, 2, 0, Math.PI * 2);
+            ctx.arc(centerX - 2, meterCenterY - 2, 2, 0, Math.PI * 2);
             ctx.fill();
             
-            // Desenhar o rótulo "dB" no topo
+            // Desenhar o rótulo "dB" abaixo do mostrador
             ctx.font = 'bold 12px sans-serif';
             ctx.fillStyle = textColor;
             ctx.textAlign = 'center';
-            ctx.fillText("dB", centerX, centerY - radius * 0.5);
+            ctx.fillText("dB", centerX, meterCenterY + radius * 1.2);
         }
         
         // Funções auxiliares para ajustar cores

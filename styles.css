@@ -425,7 +425,7 @@ select {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 140px;
+  width: 180px;
   height: 100%;
   position: relative;
 }
@@ -471,8 +471,8 @@ select {
 
 /* Analog VU Meter */
 .analog-meter {
-  width: 140px;
-  height: 140px;
+  width: 180px;
+  height: 180px;
   position: relative;
   margin: 5px auto;
   display: flex;
@@ -505,8 +505,8 @@ select {
 /* Ajustes responsivos para o VU meter analógico */
 @media (max-width: 768px) {
   .analog-meter {
-    width: 120px;
-    height: 120px;
+    width: 150px;
+    height: 150px;
   }
 }
 
@@ -779,7 +779,7 @@ footer {
   }
   
   .vu-meter {
-    width: 120px;
+    width: 150px;
   }
   
   .meter-bar {
