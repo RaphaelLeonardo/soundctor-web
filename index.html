@@ -132,6 +132,9 @@
                             <div class="meter-bar">
                                 <div class="meter-fill"></div>
                             </div>
+                            <div class="analog-meter" style="display: none;">
+                                <canvas class="analog-meter-canvas"></canvas>
+                            </div>
                             <div class="meter-value">-∞ dB</div>
                         </div>
                         <div class="vu-meter right">
@@ -139,8 +142,24 @@
                             <div class="meter-bar">
                                 <div class="meter-fill"></div>
                             </div>
+                            <div class="analog-meter" style="display: none;">
+                                <canvas class="analog-meter-canvas"></canvas>
+                            </div>
                             <div class="meter-value">-∞ dB</div>
                         </div>
+                    </div>
+                </div>
+                <div class="visualizer-control-toggle">
+                    <button class="control-toggle-btn" title="Tipo de VU Meter">
+                        <span class="material-icons">speed</span>
+                    </button>
+                    <div class="visualizer-controls">
+                        <button class="meter-type-btn active" data-type="bar" title="VU Meter Barra">
+                            <span class="material-icons">equalizer</span>
+                        </button>
+                        <button class="meter-type-btn" data-type="analog" title="VU Meter Analógico">
+                            <span class="material-icons">watch</span>
+                        </button>
                     </div>
                 </div>
             </div>

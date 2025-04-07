@@ -981,14 +981,111 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Inicializar VU Meters
     function initVuMeter() {
+        // Configurações
+        const dbMin = -60; // Valor mínimo em dB
+        const dbMax = 0;   // Valor máximo em dB
+        
         const leftMeterFill = document.querySelector('.vu-meter.left .meter-fill');
         const rightMeterFill = document.querySelector('.vu-meter.right .meter-fill');
         const leftMeterValue = document.querySelector('.vu-meter.left .meter-value');
         const rightMeterValue = document.querySelector('.vu-meter.right .meter-value');
+        const leftAnalogMeter = document.querySelector('.vu-meter.left .analog-meter');
+        const rightAnalogMeter = document.querySelector('.vu-meter.right .analog-meter');
+        const leftAnalogCanvas = document.querySelector('.vu-meter.left .analog-meter-canvas');
+        const rightAnalogCanvas = document.querySelector('.vu-meter.right .analog-meter-canvas');
+        const meterTypeButtons = document.querySelectorAll('.meter-type-btn');
+        const vuMeterToggleBtn = document.querySelector('#vu-meter .control-toggle-btn');
+        const vuMeterControls = document.querySelector('#vu-meter .visualizer-controls');
         
-        // Configurações
-        const dbMin = -60; // Valor mínimo em dB
-        const dbMax = 0;   // Valor máximo em dB
+        // Contextos 2D para desenhar os medidores analógicos
+        const leftAnalogCtx = leftAnalogCanvas ? leftAnalogCanvas.getContext('2d') : null;
+        const rightAnalogCtx = rightAnalogCanvas ? rightAnalogCanvas.getContext('2d') : null;
+        
+        // Estado atual do medidor (barra ou analógico)
+        let meterType = 'bar';
+        
+        // Configuração dos canvases para o VU Meter analógico
+        if (leftAnalogCanvas) {
+            leftAnalogCanvas.width = 140;
+            leftAnalogCanvas.height = 140;
+            
+            // Inicializar os medidores analógicos com valor mínimo para serem visíveis
+            if (leftAnalogCtx) {
+                updateAnalogMeter(leftAnalogCtx, dbMin);
+            }
+        }
+        if (rightAnalogCanvas) {
+            rightAnalogCanvas.width = 140;
+            rightAnalogCanvas.height = 140;
+            
+            // Inicializar os medidores analógicos com valor mínimo para serem visíveis
+            if (rightAnalogCtx) {
+                updateAnalogMeter(rightAnalogCtx, dbMin);
+            }
+        }
+        
+        // Configurar botão de alternância para mostrar/ocultar controles
+        if (vuMeterToggleBtn) {
+            vuMeterToggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                vuMeterControls.classList.toggle('show');
+            });
+            
+            // Fechar o menu ao clicar fora dele
+            document.addEventListener('click', () => {
+                if (vuMeterControls.classList.contains('show')) {
+                    vuMeterControls.classList.remove('show');
+                }
+            });
+        }
+        
+        // Configurar botões para alternar tipo de medidor
+        if (meterTypeButtons) {
+            meterTypeButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const type = btn.dataset.type;
+                    
+                    // Atualizar tipo do medidor
+                    meterType = type;
+                    
+                    // Atualizar classe ativa
+                    meterTypeButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    // Mostrar/ocultar elementos apropriados
+                    toggleMeterType(type);
+                });
+            });
+        }
+        
+        // Função para alternar entre tipos de medidores
+        function toggleMeterType(type) {
+            const barMeters = document.querySelectorAll('.meter-bar');
+            const analogMeters = document.querySelectorAll('.analog-meter');
+            
+            if (type === 'bar') {
+                // Mostrar medidores de barra, ocultar analógicos
+                barMeters.forEach(meter => meter.style.display = 'block');
+                analogMeters.forEach(meter => meter.style.display = 'none');
+            } else {
+                // Mostrar medidores analógicos, ocultar de barra
+                barMeters.forEach(meter => meter.style.display = 'block');
+                analogMeters.forEach(meter => meter.style.display = 'block');
+                
+                // Inicializar os medidores analógicos se necessário
+                if (leftAnalogCtx && rightAnalogCtx) {
+                    // Forçar redesenho dos medidores analógicos com o valor atual ou o mínimo (-60dB)
+                    updateAnalogMeter(leftAnalogCtx, parseFloat(leftMeterValue.textContent) || -60);
+                    updateAnalogMeter(rightAnalogCtx, parseFloat(rightMeterValue.textContent) || -60);
+                    
+                    // Ocultar barras após redesenho (solução para o problema de exibição)
+                    setTimeout(() => {
+                        barMeters.forEach(meter => meter.style.display = 'none');
+                    }, 50);
+                }
+            }
+        }
         
         function calculateDB(value) {
             // Evitar log(0)
@@ -1003,7 +1100,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return Math.max(dbMin, Math.min(dbMax, db));
         }
         
-        function updateMeter(element, valueElement, dB) {
+        function updateBarMeter(element, valueElement, dB) {
             // Converter dB para porcentagem (0-100%)
             const percent = (dB - dbMin) / (dbMax - dbMin) * 100;
             
@@ -1021,6 +1118,343 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 element.style.backgroundColor = 'var(--success-color)';
             }
+        }
+        
+        function updateAnalogMeter(ctx, dB) {
+            if (!ctx) return;
+            
+            // Valores de referência para o medidor analógico
+            const minDB = dbMin; // -60
+            const maxDB = dbMax; // 0
+            
+            const canvas = ctx.canvas;
+            const width = canvas.width;
+            const height = canvas.height;
+            const centerX = width / 2;
+            const centerY = height - 20; // Posição do pino base
+            
+            // Limpar o canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Configurações do medidor analógico
+            const radius = width * 0.35;
+            
+            // Definição de ângulos
+            const startAngle = Math.PI; // 180 graus
+            const endAngle = 0; // 0 graus
+            const angleRange = startAngle - endAngle;
+            
+            // Cores baseadas no tema atual
+            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
+            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim();
+            const cardBg = getComputedStyle(document.documentElement).getPropertyValue('--card-bg').trim();
+            const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim();
+            const successColor = getComputedStyle(document.documentElement).getPropertyValue('--success-color').trim();
+            const warningColor = getComputedStyle(document.documentElement).getPropertyValue('--warning-color').trim();
+            const dangerColor = getComputedStyle(document.documentElement).getPropertyValue('--danger-color').trim();
+            
+            // Desenhar moldura externa com cantos arredondados
+            const outerRadius = radius * 1.4;
+            ctx.beginPath();
+            ctx.fillStyle = cardBg;
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 2;
+            
+            // Usar um arco para desenhar um semicírculo para a parte superior
+            ctx.arc(centerX, centerY, outerRadius, Math.PI, 0, false);
+            
+            // Completar o retângulo para a parte inferior
+            ctx.rect(centerX - outerRadius, centerY, outerRadius * 2, outerRadius * 0.3);
+            ctx.fill();
+            
+            // Redefinir a sombra
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            
+            // Desenhar o fundo do mostrador
+            const bgGradient = ctx.createRadialGradient(
+                centerX, centerY, 0,
+                centerX, centerY, radius
+            );
+            
+            // Usar cores mais suaves baseadas no tema
+            const bgColor = cardBg === '#ffffff' ? '#f8f8f8' : '#222222';
+            bgGradient.addColorStop(0, lightenColor(bgColor, 10));
+            bgGradient.addColorStop(0.7, bgColor);
+            bgGradient.addColorStop(1, darkenColor(bgColor, 10));
+            
+            ctx.beginPath();
+            ctx.fillStyle = bgGradient;
+            ctx.arc(centerX, centerY, radius, Math.PI, 0, false);
+            ctx.fill();
+            
+            // Desenhar um pequeno gradiente circular no topo para dar profundidade
+            const highlightGradient = ctx.createRadialGradient(
+                centerX, centerY - radius * 0.8, 0,
+                centerX, centerY - radius * 0.8, radius * 0.5
+            );
+            highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+            highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            
+            ctx.beginPath();
+            ctx.fillStyle = highlightGradient;
+            ctx.arc(centerX, centerY, radius, Math.PI, 0, false);
+            ctx.fill();
+            
+            // Definir propriedades gerais
+            ctx.lineCap = 'round';
+            
+            // Desenhar os segmentos coloridos usando as cores do tema
+            const segments = [
+                { color: successColor, end: -20 }, // Verde
+                { color: warningColor, end: -6 },  // Laranja/amarelo
+                { color: dangerColor, end: 0 }     // Vermelho
+            ];
+            
+            segments.forEach((segment, index) => {
+                // Calcular ângulos para cada segmento
+                let segmentStart = minDB;
+                if (index > 0) {
+                    segmentStart = segments[index - 1].end;
+                }
+                
+                const segmentEnd = segment.end;
+                
+                // Converter valores de dB para ângulos
+                const startPercent = (segmentStart - minDB) / (maxDB - minDB);
+                const endPercent = (segmentEnd - minDB) / (maxDB - minDB);
+                
+                const segStartAngle = startAngle - (startPercent * angleRange);
+                const segEndAngle = startAngle - (endPercent * angleRange);
+                
+                // Desenhar segmento com gradiente
+                const segGradient = ctx.createLinearGradient(
+                    centerX, centerY - radius * 0.8,
+                    centerX, centerY
+                );
+                
+                // Tornar o gradiente mais suave
+                segGradient.addColorStop(0, segment.color);
+                segGradient.addColorStop(1, lightenColor(segment.color, 20));
+                
+                ctx.beginPath();
+                ctx.strokeStyle = segGradient;
+                ctx.lineWidth = radius * 0.15;
+                ctx.arc(centerX, centerY, radius * 0.85, segEndAngle, segStartAngle);
+                ctx.stroke();
+            });
+            
+            // Adicionar um efeito de brilho/reflexo por cima dos segmentos
+            const glassGradient = ctx.createLinearGradient(
+                0, centerY - radius,
+                0, centerY
+            );
+            glassGradient.addColorStop(0, 'rgba(255, 255, 255, 0.12)');
+            glassGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)');
+            glassGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            
+            ctx.beginPath();
+            ctx.fillStyle = glassGradient;
+            ctx.arc(centerX, centerY, radius * 0.95, Math.PI, 0, false);
+            ctx.fill();
+            
+            // Desenhar marcações de nível principais
+            ctx.strokeStyle = textColor;
+            ctx.fillStyle = textColor;
+            
+            // Usar fonte do sistema para combinar com o resto da UI
+            ctx.font = 'bold 10px sans-serif';
+            ctx.textAlign = 'center';
+            
+            const markings = [
+                { value: -60, label: '-60' },
+                { value: -50, label: '-50' },
+                { value: -40, label: '-40' },
+                { value: -30, label: '-30' },
+                { value: -20, label: '-20' },
+                { value: -10, label: '-10' },
+                { value: -6, label: '-6' },
+                { value: -3, label: '-3' },
+                { value: 0, label: '0' }
+            ];
+            
+            markings.forEach(mark => {
+                const percent = (mark.value - minDB) / (maxDB - minDB);
+                const angle = startAngle - (percent * angleRange);
+                
+                // Desenhar traços de marcação
+                const outerRadius = radius * 0.85 + radius * 0.10;
+                const innerRadius = radius * 0.85 - radius * 0.04;
+                
+                const x1 = centerX + Math.cos(angle) * outerRadius;
+                const y1 = centerY + Math.sin(angle) * outerRadius;
+                const x2 = centerX + Math.cos(angle) * innerRadius;
+                const y2 = centerY + Math.sin(angle) * innerRadius;
+                
+                ctx.beginPath();
+                ctx.lineWidth = 2;
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+                
+                // Desenhar rótulos com valor em dB
+                const textRadius = radius * 0.65;
+                const textX = centerX + Math.cos(angle) * textRadius;
+                const textY = centerY + Math.sin(angle) * textRadius;
+                ctx.fillText(mark.label, textX, textY);
+            });
+            
+            // Desenhar marcações menores
+            for (let i = minDB + 5; i < maxDB; i += 5) {
+                // Pular os valores que já têm marcações principais
+                if (markings.some(mark => mark.value === i)) continue;
+                
+                const percent = (i - minDB) / (maxDB - minDB);
+                const angle = startAngle - (percent * angleRange);
+                
+                const outerRadius = radius * 0.85 + radius * 0.06;
+                const innerRadius = radius * 0.85 - radius * 0.02;
+                
+                const x1 = centerX + Math.cos(angle) * outerRadius;
+                const y1 = centerY + Math.sin(angle) * outerRadius;
+                const x2 = centerX + Math.cos(angle) * innerRadius;
+                const y2 = centerY + Math.sin(angle) * innerRadius;
+                
+                ctx.beginPath();
+                ctx.lineWidth = 1;
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+            
+            // Converter dB para porcentagem e então para ângulo
+            const percent = (dB - minDB) / (maxDB - minDB);
+            const angle = startAngle - (percent * angleRange);
+            
+            // Desenhar linha de borda fina ao redor
+            ctx.beginPath();
+            ctx.strokeStyle = lightenColor(textColor, 30);
+            ctx.lineWidth = 2;
+            ctx.arc(centerX, centerY, radius + radius * 0.2, Math.PI, 0, false);
+            ctx.stroke();
+            
+            // Desenhar a agulha com cor primária do tema
+            const needleLength = radius * 0.85;
+            
+            // Sombra para a agulha
+            ctx.beginPath();
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 1;
+            ctx.strokeStyle = accentColor;
+            ctx.lineWidth = 3;
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(
+                centerX + Math.cos(angle) * needleLength,
+                centerY + Math.sin(angle) * needleLength
+            );
+            ctx.stroke();
+            
+            // Resetar sombra
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            
+            // Desenhar o pino central
+            const centerGradient = ctx.createRadialGradient(
+                centerX - 2, centerY - 2, 0,
+                centerX, centerY, 8
+            );
+            centerGradient.addColorStop(0, lightenColor(primaryColor, 40));
+            centerGradient.addColorStop(1, primaryColor);
+            
+            ctx.beginPath();
+            ctx.fillStyle = centerGradient;
+            ctx.arc(centerX, centerY, 8, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Brilho do pino
+            ctx.beginPath();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.arc(centerX - 2, centerY - 2, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Desenhar o rótulo "dB" no topo
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillStyle = textColor;
+            ctx.textAlign = 'center';
+            ctx.fillText("dB", centerX, centerY - radius * 0.5);
+        }
+        
+        // Funções auxiliares para ajustar cores
+        function lightenColor(color, percent) {
+            return adjustColor(color, percent);
+        }
+        
+        function darkenColor(color, percent) {
+            return adjustColor(color, -percent);
+        }
+        
+        function adjustColor(color, percent) {
+            // Lidar com cores transparentes
+            if (!color || color === 'transparent') return color;
+            
+            // Verificar se a cor tem formato hexadecimal
+            const isHex = color.startsWith('#');
+            
+            let r, g, b;
+            
+            if (isHex) {
+                // Remover o hash e normalizar para 6 dígitos
+                let hex = color.slice(1);
+                if (hex.length === 3) {
+                    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+                }
+                
+                r = parseInt(hex.slice(0, 2), 16);
+                g = parseInt(hex.slice(2, 4), 16);
+                b = parseInt(hex.slice(4, 6), 16);
+            } else if (color.startsWith('rgb')) {
+                // Extrair valores RGB 
+                const matches = color.match(/(\d+),\s*(\d+),\s*(\d+)/);
+                if (matches) {
+                    r = parseInt(matches[1], 10);
+                    g = parseInt(matches[2], 10);
+                    b = parseInt(matches[3], 10);
+                } else {
+                    return color; // Formato não suportado
+                }
+            } else {
+                return color; // Formato não suportado
+            }
+            
+            // Ajustar valores RGB
+            r = Math.max(0, Math.min(255, r + percent));
+            g = Math.max(0, Math.min(255, g + percent));
+            b = Math.max(0, Math.min(255, b + percent));
+            
+            return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+        }
+        
+        // Função auxiliar para escurecer ou clarear uma cor
+        function shadeColor(color, percent) {
+            const R = parseInt(color.substring(1, 3), 16);
+            const G = parseInt(color.substring(3, 5), 16);
+            const B = parseInt(color.substring(5, 7), 16);
+            
+            const R_new = Math.max(0, Math.min(255, R + percent));
+            const G_new = Math.max(0, Math.min(255, G + percent));
+            const B_new = Math.max(0, Math.min(255, B + percent));
+            
+            return '#' + 
+                ((1 << 24) + (R_new << 16) + (G_new << 8) + B_new)
+                .toString(16).slice(1);
         }
         
         vuMeter = {
@@ -1074,13 +1508,31 @@ document.addEventListener('DOMContentLoaded', function() {
                     const dbLeft = calculateDB(rmsLeft);
                     const dbRight = calculateDB(rmsRight);
                     
-                    // Atualizar medidores com valores específicos de cada canal
-                    updateMeter(leftMeterFill, leftMeterValue, dbLeft);
-                    updateMeter(rightMeterFill, rightMeterValue, dbRight);
+                    // Atualizar medidores com base no tipo selecionado
+                    if (meterType === 'bar') {
+                        // Atualizar medidores de barra
+                        updateBarMeter(leftMeterFill, leftMeterValue, dbLeft);
+                        updateBarMeter(rightMeterFill, rightMeterValue, dbRight);
+                    } else {
+                        // Atualizar medidores analógicos
+                        updateAnalogMeter(leftAnalogCtx, dbLeft);
+                        updateAnalogMeter(rightAnalogCtx, dbRight);
+                        
+                        // Também atualizar valores de texto
+                        leftMeterValue.textContent = `${dbLeft.toFixed(1)} dB`;
+                        rightMeterValue.textContent = `${dbRight.toFixed(1)} dB`;
+                    }
                 } else {
                     // Estado padrão - medidores em -60dB (mínimo)
-                    updateMeter(leftMeterFill, leftMeterValue, dbMin);
-                    updateMeter(rightMeterFill, rightMeterValue, dbMin);
+                    if (meterType === 'bar') {
+                        updateBarMeter(leftMeterFill, leftMeterValue, dbMin);
+                        updateBarMeter(rightMeterFill, rightMeterValue, dbMin);
+                    } else {
+                        updateAnalogMeter(leftAnalogCtx, dbMin);
+                        updateAnalogMeter(rightAnalogCtx, dbMin);
+                        leftMeterValue.textContent = `${dbMin.toFixed(1)} dB`;
+                        rightMeterValue.textContent = `${dbMin.toFixed(1)} dB`;
+                    }
                 }
             }
         };

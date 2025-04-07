@@ -425,8 +425,9 @@ select {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 80px;
+  width: 140px;
   height: 100%;
+  position: relative;
 }
 
 .meter-label {
@@ -440,11 +441,12 @@ select {
   justify-content: center;
   align-items: center;
   margin-bottom: 10px;
+  z-index: 2;
 }
 
 .meter-bar {
   width: 60px;
-  height: 300px;
+  height: 200px;
   background-color: var(--meter-bg);
   border-radius: 8px;
   position: relative;
@@ -465,6 +467,47 @@ select {
   font-family: 'Consolas', 'Courier New', monospace;
   font-size: 14px;
   color: var(--text-color);
+}
+
+/* Analog VU Meter */
+.analog-meter {
+  width: 140px;
+  height: 140px;
+  position: relative;
+  margin: 5px auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: transparent;
+  padding: 5px;
+  transition: transform 0.3s ease;
+}
+
+.analog-meter:hover {
+  transform: scale(1.05);
+}
+
+.analog-meter-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+}
+
+/* Ajustes para a visualização do VU meter quando analógico é selecionado */
+.visualizer-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Ajustes responsivos para o VU meter analógico */
+@media (max-width: 768px) {
+  .analog-meter {
+    width: 120px;
+    height: 120px;
+  }
 }
 
 /* Tema Controls */
@@ -735,9 +778,18 @@ footer {
     gap: 15px;
   }
   
+  .vu-meter {
+    width: 120px;
+  }
+  
   .meter-bar {
-    height: 200px;
+    height: 160px;
     width: 40px;
+  }
+  
+  .analog-meter {
+    width: 110px;
+    height: 110px;
   }
 }
 
