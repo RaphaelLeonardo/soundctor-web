@@ -467,6 +467,129 @@ select {
   color: var(--text-color);
 }
 
+/* Analog VU Meter */
+.analog-meter {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 120px;
+    height: 100%;
+}
+
+.meter-dial {
+    width: 120px;
+    height: 120px;
+    background-color: var(--meter-bg);
+    border: 4px solid white;
+    border-radius: 50%;
+    position: relative;
+    transform: rotate(-160deg);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.meter-scale {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 50% 100%);
+}
+
+.meter-scale::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2px;
+    height: 8px;
+    background-color: var(--text-color);
+    transform-origin: 0 0;
+    transform: rotate(-90deg);
+}
+
+.meter-scale::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2px;
+    height: 8px;
+    background-color: var(--text-color);
+    transform-origin: 0 0;
+    transform: rotate(0deg);
+}
+
+.meter-needle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2px;
+    height: 50px;
+    background-color: var(--danger-color);
+    transform-origin: 0 0;
+    transform: rotate(-90deg);
+    transition: transform 0.05s ease-out;
+}
+
+.meter-needle::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: -10px;
+    width: 16px;
+    height: 16px;
+    background-color: var(--danger-color);
+    border-radius: 50%;
+    border: 2px solid var(--card-bg);
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive adjustments for analog meters */
+@media (max-width: 768px) {
+    .analog-meter {
+        width: 100px;
+    }
+    
+    .meter-dial {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .meter-needle {
+        height: 40px;
+    }
+
+    .meter-needle::before {
+        top: -6px;
+        left: -6px;
+        width: 12px;
+        height: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .analog-meter {
+        width: 80px;
+    }
+    
+    .meter-dial {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .meter-needle {
+        height: 30px;
+    }
+
+    .meter-needle::before {
+        top: -5px;
+        left: -5px;
+        width: 10px;
+        height: 10px;
+    }
+}
+
 /* Tema Controls */
 .theme-controls {
   display: flex;

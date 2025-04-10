@@ -985,10 +985,52 @@ document.addEventListener('DOMContentLoaded', function() {
         const rightMeterFill = document.querySelector('.vu-meter.right .meter-fill');
         const leftMeterValue = document.querySelector('.vu-meter.left .meter-value');
         const rightMeterValue = document.querySelector('.vu-meter.right .meter-value');
+        const leftNeedle = document.querySelector('.analog-meter.left .meter-needle');
+        const rightNeedle = document.querySelector('.analog-meter.right .meter-needle');
+        const leftAnalogValue = document.querySelector('.analog-meter.left .meter-value');
+        const rightAnalogValue = document.querySelector('.analog-meter.right .meter-value');
         
         // Configurações
         const dbMin = -60; // Valor mínimo em dB
         const dbMax = 0;   // Valor máximo em dB
+        const needleMinAngle = -90; // Ângulo mínimo da agulha (em graus)
+        const needleMaxAngle = 0;   // Ângulo máximo da agulha (em graus)
+        
+        // Adicionar event listeners para os botões de estilo
+        const toggleButton = document.querySelector('#vu-meter .control-toggle-btn');
+        const viewButtons = document.querySelectorAll('#vu-meter .view-btn');
+        
+        // Configurar listener para o botão toggle
+        if (toggleButton) {
+            toggleButton.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevenir que o clique feche o menu imediatamente
+                const controls = document.querySelector('#vu-meter .visualizer-controls');
+                controls.classList.toggle('show');
+            });
+            
+            // Fechar o menu ao clicar fora dele
+            document.addEventListener('click', () => {
+                const controls = document.querySelector('#vu-meter .visualizer-controls');
+                if (controls.classList.contains('show')) {
+                    controls.classList.remove('show');
+                }
+            });
+        }
+        
+        // Configurar listeners para os botões de estilo
+        viewButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevenir que o clique feche o menu imediatamente
+                const style = btn.dataset.style;
+                document.querySelectorAll('.vu-meters').forEach(meter => {
+                    meter.style.display = 'none';
+                });
+                document.querySelector(`.vu-meters.${style}`).style.display = 'flex';
+                
+                viewButtons.forEach(btn => btn.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
         
         function calculateDB(value) {
             // Evitar log(0)
@@ -1003,7 +1045,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return Math.max(dbMin, Math.min(dbMax, db));
         }
         
-        function updateMeter(element, valueElement, dB) {
+        function updateDigitalMeter(element, valueElement, dB) {
             // Converter dB para porcentagem (0-100%)
             const percent = (dB - dbMin) / (dbMax - dbMin) * 100;
             
@@ -1023,6 +1065,26 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
+        function updateAnalogMeter(needle, valueElement, dB) {
+            // Converter dB para ângulo da agulha
+            const angle = ((dB - dbMin) / (dbMax - dbMin)) * (needleMaxAngle - needleMinAngle) + needleMinAngle;
+            
+            // Atualizar posição da agulha
+            needle.style.transform = `rotate(${angle}deg)`;
+            
+            // Atualizar valor em texto
+            valueElement.textContent = `${dB.toFixed(1)} dB`;
+            
+            // Definir cor da agulha com base no nível
+            if (dB > -3) {
+                needle.style.backgroundColor = 'var(--danger-color)';
+            } else if (dB > -12) {
+                needle.style.backgroundColor = 'var(--warning-color)';
+            } else {
+                needle.style.backgroundColor = 'var(--success-color)';
+            }
+        }
+        
         vuMeter = {
             visualize: function(analyser) {
                 if (analyser) {
@@ -1037,32 +1099,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // Separar os dados de forma adequada
                     // O WebAudio API usa dados intercalados: [L, R, L, R, L, R, ...]
-                    for (let i = 0; i < bufferLength/2; i++) {
-                        // Índice entrelaceado: L (0,2,4...) e R (1,3,5...)
-                        const leftIndex = i * 2;
-                        const rightIndex = i * 2 + 1;
-                        
-                        // Verificar se os índices são válidos
-                        if (leftIndex < bufferLength) {
-                            leftChannelData[i] = dataArray[leftIndex];
-                        }
-                        
-                        if (rightIndex < bufferLength) {
-                            rightChannelData[i] = dataArray[rightIndex];
-                        }
+                    for (let i = 0; i < bufferLength; i += 2) {
+                        leftChannelData[i/2] = dataArray[i];
+                        rightChannelData[i/2] = dataArray[i + 1];
                     }
                     
-                    // Calcular RMS (Root Mean Square) para cada canal separadamente
+                    // Calcular RMS para cada canal
                     let sumLeft = 0;
                     let sumRight = 0;
                     
                     for (let i = 0; i < leftChannelData.length; i++) {
-                        // Elevar ao quadrado cada amostra
                         sumLeft += leftChannelData[i] * leftChannelData[i];
                     }
                     
                     for (let i = 0; i < rightChannelData.length; i++) {
-                        // Elevar ao quadrado cada amostra
                         sumRight += rightChannelData[i] * rightChannelData[i];
                     }
                     
@@ -1070,17 +1120,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     const rmsLeft = Math.sqrt(sumLeft / leftChannelData.length);
                     const rmsRight = Math.sqrt(sumRight / rightChannelData.length);
                     
-                    // Converter para dB e atualizar os medidores
+                    // Converter para dB
                     const dbLeft = calculateDB(rmsLeft);
                     const dbRight = calculateDB(rmsRight);
                     
-                    // Atualizar medidores com valores específicos de cada canal
-                    updateMeter(leftMeterFill, leftMeterValue, dbLeft);
-                    updateMeter(rightMeterFill, rightMeterValue, dbRight);
+                    // Atualizar medidores digitais
+                    updateDigitalMeter(leftMeterFill, leftMeterValue, dbLeft);
+                    updateDigitalMeter(rightMeterFill, rightMeterValue, dbRight);
+                    
+                    // Atualizar medidores analógicos
+                    updateAnalogMeter(leftNeedle, leftAnalogValue, dbLeft);
+                    updateAnalogMeter(rightNeedle, rightAnalogValue, dbRight);
                 } else {
                     // Estado padrão - medidores em -60dB (mínimo)
-                    updateMeter(leftMeterFill, leftMeterValue, dbMin);
-                    updateMeter(rightMeterFill, rightMeterValue, dbMin);
+                    updateDigitalMeter(leftMeterFill, leftMeterValue, dbMin);
+                    updateDigitalMeter(rightMeterFill, rightMeterValue, dbMin);
+                    updateAnalogMeter(leftNeedle, leftAnalogValue, dbMin);
+                    updateAnalogMeter(rightNeedle, rightAnalogValue, dbMin);
                 }
             }
         };
