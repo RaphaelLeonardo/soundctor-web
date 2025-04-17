@@ -67,7 +67,6 @@
                 <button id="youtube-search-btn" class="btn primary">Buscar</button>
             </div>
             <div class="youtube-results" id="youtube-results">
-                <!-- Resultados da busca aparecerão aqui -->
             </div>
             <div class="youtube-player-container" id="youtube-player-container">
                 <div id="youtube-player"></div>
@@ -122,60 +121,51 @@
                     </div>
                 </div>
             </div>
-            
-            <div class="visualizer-card" id="vu-meter">
-                <h3 class="visualizer-title">VU Meters</h3>
-                <div class="visualizer-content">
-                    <div class="vu-meters digital">
-                        <div class="vu-meter left">
-                            <div class="meter-label">L</div>
-                            <div class="meter-bar">
-                                <div class="meter-fill"></div>
-                            </div>
-                            <div class="meter-value">-∞ dB</div>
-                        </div>
-                        <div class="vu-meter right">
-                            <div class="meter-label">R</div>
-                            <div class="meter-bar">
-                                <div class="meter-fill"></div>
-                            </div>
-                            <div class="meter-value">-∞ dB</div>
-                        </div>
-                    </div>
-                    <div class="vu-meters analog" style="display: none;">
-                        <div class="analog-meter left">
-                            <div class="meter-label">L</div>
-                            <div class="meter-dial">
-                                <div class="meter-scale"></div>
-                                <div class="meter-needle"></div>
-                            </div>
-                            <div class="meter-value">-∞ dB</div>
-                        </div>
-                        <div class="analog-meter right">
-                            <div class="meter-label">R</div>
-                            <div class="meter-dial">
-                                <div class="meter-scale"></div>
-                                <div class="meter-needle"></div>
-                            </div>
-                            <div class="meter-value">-∞ dB</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="visualizer-control-toggle">
-                    <button class="control-toggle-btn" title="Estilo do VU Meter">
-                        <span class="material-icons">analytics</span>
-                    </button>
-                    <div class="visualizer-controls">
-                        <button class="view-btn active" data-style="digital" title="VU Meter Digital">
-                            <span class="material-icons">bar_chart</span>
-                        </button>
-                        <button class="view-btn" data-style="analog" title="VU Meter Analógico">
-                            <span class="material-icons">speed</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
         </div>
+        <div class="visualizer-card" id="vu-meter">
+            <h3 class="visualizer-title">VU Meters</h3>
+            <div class="visualizer-content" style="display: flex; justify-content: center; align-items: center; gap: 8rem;">
+              
+              <!-- VU Analógico Esquerdo -->
+                <div class="analog-meter left">
+                  <div class="meter-label">L</div>
+                  <div class="meter-dial">
+                    <div class="meter-scale"></div>
+                    <div class="meter-needle"></div>
+                  </div>
+                  <div class="meter-value">-∞ dB</div>
+                </div>
+          
+              <!-- VUs Digitais Centralizados -->
+              <div class="vu-meters digital" style="display: flex; gap: 2rem;">
+                <div class="vu-meter left">
+                  <div class="meter-label">L</div>
+                  <div class="meter-bar">
+                    <div class="meter-fill"></div>
+                  </div>
+                  <div class="meter-value">-∞ dB</div>
+                </div>
+                <div class="vu-meter right">
+                  <div class="meter-label">R</div>
+                  <div class="meter-bar">
+                    <div class="meter-fill"></div>
+                  </div>
+                  <div class="meter-value">-∞ dB</div>
+                </div>
+              </div>
+          
+              <!-- VU Analógico Direito -->
+                <div class="analog-meter right">
+                  <div class="meter-label">R</div>
+                  <div class="meter-dial">
+                    <div class="meter-scale"></div>
+                    <div class="meter-needle"></div>
+                  </div>
+                  <div class="meter-value">-∞ dB</div>
+                </div>
+          
+            </div>
+          </div>          
 
         <footer>
             <p>Soundctor Web v2.0</p>

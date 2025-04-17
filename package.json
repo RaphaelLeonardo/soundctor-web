@@ -32,10 +32,11 @@
   },
   "homepage": "https://github.com/RaphaelLeonardo/soundctor-web#readme",
   "dependencies": {
+    "soundctor-web": "file:"
   },
   "devDependencies": {
-    "electron-builder": "^26.0.12",
-    "electron": "^35.1.2"
+    "electron": "^35.1.2",
+    "electron-builder": "^26.0.12"
   },
   "build": {
     "appId": "com.raphael.soundctor",
